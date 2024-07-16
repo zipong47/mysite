@@ -1,0 +1,106 @@
+
+<!-- 新增的卡片所在列  style="color: #e11111;" -->
+{% if board_info %}
+<div class="col-md-6 d-flex justify-content-end" style="padding: 20px">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+        <h4 class="card-title">No.{{board_info.board_number}}</h4>
+        <h3 style="color: #e11111;">{{message}}</h3>
+        <h3 class="font_end_message" style="color: #e11111;"></h3>
+        <hr>
+        <h5 class="card-subtitle mb-2 text-body-secondary">sn: {{board_info.serial_number}}</h5>
+        <p class="card-text">project: {{board_info.project_name}}</p>
+        <p class="card-text">configuration: {{board_info.project_config}}</p>
+        <p class="card-text">build: {{board_info.subprotject_name}}</p>
+        <p class="card-text">cp: {{board_info.cp_nums}}</p>
+        <p class="card-text">test item: {{board_info.test_item_name}}</p>
+        <hr>
+        <a href="#" class="card-link" data-bs-toggle="modal" data-bs-target="#detailsModal">Details</a>
+        <a href="#" class="card-link" data-bs-toggle="modal" data-bs-target="#historyModal">History</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailsModalLabel">Product Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- 在这里添加产品的所有信息 -->
+          <h4 class="card-title">No.{{board_info.board_number}}</h4>
+          <p class="card-text">sn: {{board_info.serial_number}}</p>
+          <p class="card-text">project: {{board_info.project_name}}</p>
+          <p class="card-text">configuration: {{board_info.project_config}}</p>
+          <p class="card-text">build: {{board_info.subprotject_name}}</p>
+          <p class="card-text">cp: {{board_info.cp_nums}}</p>
+          <p class="card-text">test item: {{board_info.test_item_name}}</p>
+          <p class="card-text">product code: {{board_info.product_code}}</p>
+          <p class="card-text">APN: {{board_info.test_item_name}}</p>
+          <p class="card-text">HHPN: {{board_info.test_item_name}}</p>
+          <p class="card-text">First_GS_sn: {{board_info.first_GS_sn}}</p>
+          <p class="card-text">Second_GS_sn: {{board_info.second_GS_sn}}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- History Modal -->
+  <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="historyModalLabel">Test History</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <!-- 在这里添加产品的所有测试记录 -->
+            {% if test_history %}
+            {% for each in test_history %}
+            <p class="card-text" style="color: blue;">{{each.station_type}}----Start time:{{each.start_time}}----{{each.result}}</p>
+            <div class="text-center"> <!-- 添加一个包装容器 -->
+                <i class="fa-solid fa-arrow-down icon"></i>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="card-text" style="color: blue;">无记录！</p>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- 决策树所在列 -->
+<div class="col-md-6 d-flex align-items-center justify-content-between" style="padding: 20px;">
+    <div class="d-flex flex-column align-items-center">
+        <!-- Start Node -->
+        <!-- <div class="step-box" style="border-radius: 10px; background-color: #e0f2f1;">
+            <h5>Start</h5>
+        </div>
+        <i class="fa-solid fa-arrow-down icon"></i> -->
+
+        <!-- Dynamic Steps -->
+        {% for station in test_plan %}
+        <div class="step-box" style="background-color: #e0f2f1;">
+            <h5>{{station}}</h5>
+        </div>
+        <i class="fa-solid fa-arrow-down icon"></i>
+        {% endfor %}
+
+        <!-- End Node -->
+        <!-- <div class="step-box" style="border-radius: 10px; background-color: #e0f2f1;">
+            <h5>结束</h5>
+        </div> -->
+    </div>
+</div>

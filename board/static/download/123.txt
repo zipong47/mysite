@@ -1,0 +1,7 @@
+12321313
+
+            {% for i in range(detail.total_subproject_nums) %}
+            {% if forloop.first %}
+            <th class="align-middle" scope="col" rowspan="{{detail.total_subproject_nums}}">Valkyrie</th>
+            {% endif %}
+            {% endfor %}

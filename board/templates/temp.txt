@@ -1,0 +1,44 @@
+    b=function () {
+      // each 是 为每一个匹配的元素 执行定义的方法
+        $("#ul_header").find("li").each(function () {
+          var a = $(this).find("a");
+          console.log($(a).attr("href"))
+          console.log(location.pathname)
+          console.log('-----------------')
+        }
+      )}
+
+    b=function () {
+      // each 是 为每一个匹配的元素 执行定义的方法
+        $("#ul_header").find("li").each(function () {
+          var a = $(this).find("a:first")[0];
+          console.log(location.pathname)
+          console.log('-----------------')
+          // location.pathname 获取 当前浏览器上的url 地址
+          if ($(a).attr("href") === location.pathname) {
+            $(this).find("a:first")[0].addClass("active");
+          } else {
+            $(this).find("a:first")[0].removeClass("active");
+          }
+        }
+      )}
+
+
+<script>
+    $(document).ready(function () {
+      // each 是 为每一个匹配的元素 执行定义的方法
+        $("#ul_header").find("li").each(function () {
+          var a = $(this).find("a:first")[0];
+          console.log($(a))
+          console.log($(a).attr("href"))
+          console.log(location.pathname)
+          console.log('-----------------')
+          // location.pathname 获取 当前浏览器上的url 地址
+          if ($(a).attr("href") === location.pathname) {
+            $(this).find("a:first")[0].addClass("active");
+          } else {
+            $(this).find("a:first")[0].removeClass("active");
+          }
+        }
+    )});
+</script>
