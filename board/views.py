@@ -609,3 +609,7 @@ def edit_test_plan(request,item_id):
             return JsonResponse({'form': form_html})  # 返回表单的HTML
         
     return render(request, 'board/enter_test_plan.html', {'form': form, 'item_id': item_id})
+
+@csrf_exempt
+def eceptional_page(request):
+    return render(request, "board/eceptional_page.html")

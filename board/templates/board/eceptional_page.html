@@ -152,23 +152,41 @@
       </div>
 
       <div class="row g-3">
-
-        <div class=col-md-6>
-          <form action="{% url 'get_env_report' %}" method="post" enctype= multipart/form-data>
-            {{ form }}
-            <input type="submit" value="Submit">
-          </form>
+        <div class="col-md-4">
+          <label for="timeSelector" class="form-label">Time:</label>
+          <select class="form-select" id="timeSelector" style="width: 100%;"></select>
+            <option value="all">All</option>
+            <option value="today">Today</option>
+            <option value="thisWeek">This Week</option>
+            <option value="thisMonth">This Month</option>
+          </select>
         </div>
-        
-        {% if messages %}
-        <ul class="messages">
-          {% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
+        <div class="col-md-4">
+          <label for="nameSelector" class="form-label">Name:</label>
+          <select class="form-select" id="nameSelector" style="width: 100%;"></select>
+            <option value="all">All</option>
+            <option value="John">John</option>
+            <option value="Jane">Jane</option>
+            <option value="Mike">Mike</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary" id="searchButton">Search</button>
+        </div>
       </div>
-      
+
+      <table class="table mt-4">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Time</th>
+            <th scope="col">Data</th>
+          </tr>
+        </thead>
+        <tbody id="searchResults">
+          <!-- Search results will be dynamically added here -->
+        </tbody>
+      </table>
     </main>
   </div>
 </div>

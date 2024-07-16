@@ -15,4 +15,5 @@ urlpatterns = [
     path("update_summary/", views.update_summary, name="update_summary"),
     path('edit_test_plan/<int:item_id>/', views.edit_test_plan, name='edit_test_plan'),
     path('show_history/<str:type>/', views.show_history, name='show_history'),
+    path('eceptional_page/', views.eceptional_page, name='eceptional_page'),
 ]
