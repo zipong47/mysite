@@ -613,3 +613,44 @@ def edit_test_plan(request,item_id):
 @csrf_exempt
 def eceptional_page(request):
     return render(request, "board/eceptional_page.html")
+
+from django.db.models import Q
+
+def submit_data(request):
+    if request.method == 'POST':
+        start_time = request.POST.get('startTime')
+        end_time = request.POST.get('endTime')
+        project_name = request.POST.get('project')
+        station_type = request.POST.get('station')
+
+        # Filter the TestRecord based on the provided criteria
+        filters = Q()
+        
+        if start_time and end_time:
+            filters &= Q(start_time__range=[start_time, end_time])
+        
+        if project_name and project_name != 'project_default':
+            filters &= Q(board__project_name=project_name)
+        
+        if station_type and station_type != 'station_default':
+            filters &= Q(station_type=station_type)
+
+        test_records = TestRecord.objects.filter(filters)
+
+        # You can format the test_records as needed, here is an example of converting them to JSON
+        test_records_data = list(test_records.values('board__project_name', 'station_type', 'start_time', 'stop_time', 'result'))
+
+        return JsonResponse({'test_records': test_records_data})
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+def search_serial_number(request):
+    if request.method == 'POST':
+        serial_number = request.POST.get('serialNumber')
+        try:
+            board = Board.objects.get(serial_number=serial_number)
+            test_records = TestRecord.objects.filter(board=board)
+            test_records_data = list(test_records.values('station_type', 'start_time', 'stop_time', 'result'))
+            return JsonResponse({'test_records': test_records_data})
+        except Board.DoesNotExist:
+            return JsonResponse({'error': 'Serial number not found.'}, status=404)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)

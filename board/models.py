@@ -10,7 +10,6 @@ class Board(models.Model):
     test_item_name=models.CharField(max_length=100)
     cp_nums = models.IntegerField(default=0)
     # input_env_finished_time = models.DateTimeField("input env finished")
-    # 鸿海料号、apple料号、gs卡号
     product_code=models.CharField(max_length=20,default='')
     APN=models.CharField(max_length=50,default='')
     HHPN=models.CharField(max_length=50,default='')
@@ -44,12 +43,6 @@ class TestSchedule(models.Model):
     def __str__(self):
         return f"board_num={self.serial_number.board_number},cp_num={self.cp_nums},test_sequence={self.test_sequence})"
   
-# A Django model that records error information related to board testing. The model should have the following fields:
-# 1.Two foreign keys referencing the primary keys from the Board model and the TestRecord model respectively.
-# 2.string field named fail_message to store a message about the failure.
-# 3.string field named remark for additional comments.
-# 4.choice field named fail_type with predefined types of failures (e.g., 'Hardware', 'Software', 'User Error').
-# 5.file field named fail_picture intended to store an image of the failure.
 class ErrorRecord(models.Model):
     # Foreign keys to Board and TestRecord
     board = models.ForeignKey(Board, on_delete=models.CASCADE)

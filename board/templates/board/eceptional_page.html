@@ -94,8 +94,8 @@
     </style>
 
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
-  </head>
-  <body>
+</head>
+<body>
 
 <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
   <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">REL</a>
@@ -209,7 +209,7 @@
               </div>
               <div class="form-group col-auto d-flex align-items-center">
                   <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
-                  <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" onclick="addMore()">Add More</button>
+                  <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" data-bs-toggle="modal" data-bs-target="#addMoreModal">Add More</button>
               </div>
           </form>
         </div>
@@ -228,6 +228,28 @@
         </tbody>
       </table>
     </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addMoreModal" tabindex="-1" aria-labelledby="addMoreModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addMoreModalLabel">Add More</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="serialNumberForm">
+          <div class="mb-3">
+            <label for="serialNumber" class="form-label">Serial Number</label>
+            <input type="text" class="form-control" id="serialNumber" name="serialNumber">
+          </div>
+          <button type="button" class="btn btn-primary" onclick="searchSerialNumber()">Search</button>
+        </form>
+        <div id="searchResult"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -261,10 +283,24 @@
 
           $.ajax({
               type: 'POST',
-              url: '/submit-data-url',  // Replace with your actual URL
+              url: '#/',  // Adjust the URL to match your Django setup
               data: data,
               success: function(response) {
-                  alert('Data submitted successfully!');
+                  console.log(response);
+                  // Process the response and update the frontend accordingly
+                  // Example: Display results in a table
+                  var resultsTable = $('#searchResults');
+                  resultsTable.empty();
+                  $.each(response.test_records, function(index, record) {
+                      var row = '<tr>' +
+                          '<td>' + record.board__project_name + '</td>' +
+                          '<td>' + record.start_time + '</td>' +
+                          '<td>' + record.stop_time + '</td>' +
+                          '<td>' + record.station_type + '</td>' +
+                          '<td>' + record.result + '</td>' +
+                          '</tr>';
+                      resultsTable.append(row);
+                  });
               },
               error: function(error) {
                   alert('Error submitting data.');
@@ -273,9 +309,19 @@
       });
   });
 
-  function addMore() {
-      // Functionality to add more input fields
-      console.log("Add more functionality triggered.");
+  function searchSerialNumber() {
+      var serialNumber = $('#serialNumber').val();
+      $.ajax({
+          type: 'POST',
+          url: '#/',  // Adjust the URL to match your Django setup
+          data: { serialNumber: serialNumber },
+          success: function(response) {
+              $('#searchResult').html('<pre>' + JSON.stringify(response.test_records, null, 2) + '</pre>');
+          },
+          error: function(error) {
+              $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
+          }
+      });
   }
 </script>
 </body>
