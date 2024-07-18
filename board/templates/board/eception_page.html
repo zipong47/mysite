@@ -192,19 +192,19 @@
               <div class="form-group col-auto">
                   <label>Project:</label>
                   <select class="form-control form-select" id="projectDropdown" name="project">
-                      <option value="project_default">Null</option>
-                      <option value="option1">Option 1</option>
-                      <option value="option2">Option 2</option>
-                      <option value="option3">Option 3</option>
+                      <option value="">Select a project</option>
+                      {% for option in project_name_list %}
+                      <option>{{option}}</option>
+                      {% endfor %}
                   </select>
               </div>
               <div class="form-group col-auto">
                   <label>Station:</label>
                   <select class="form-control form-select" id="stationDropdown" name="station">
-                      <option value="station_default">Null</option>
-                      <option value="option1">Option 1</option>
-                      <option value="option2">Option 2</option>
-                      <option value="option3">Option 3</option>
+                    <option value="">Select a station</option>
+                    {% for option in station_type_list %}
+                    <option>{{option}}</option>
+                    {% endfor %}
                   </select>
               </div>
               <div class="form-group col-auto d-flex align-items-center">
@@ -218,9 +218,14 @@
       <table class="table mt-4">
         <thead>
           <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Time</th>
-            <th scope="col">Data</th>
+            <th scope="col">No.</th>
+            <th scope="col">SN</th>
+            <th scope="col">时间</th>
+            <th scope="col">Project Name</th>
+            <th scope="col">Station type</th>
+            <th scope="col">Board Status</th>
+            <th scope="col">Fail Message</th>
+            <th scope="col">Site</th>
           </tr>
         </thead>
         <tbody id="searchResults">
@@ -261,6 +266,20 @@
 <script src="{% static 'js/flatpickr.js' %}"></script>
 
 <script>
+    $(document).ready(function () {
+    // 遍历所有导航项并检查是否匹配当前路径
+    $("#ul_header li a").each(function () {
+      var a = $(this);
+      console.log("a: " + a.attr("href"));
+      console.log("location.pathname: " + location.pathname);
+      if (a.attr("href") === location.pathname) {
+        a.addClass("active");
+      } else {
+        a.removeClass("active");
+      }
+    });
+  })
+
   $(document).ready(function() {
       flatpickr("#dateTimeRange", {
           mode: "range",
@@ -282,7 +301,7 @@
 
           $.ajax({
               type: 'POST',
-              url: '#/',  // Adjust the URL to match your Django setup
+              url: '/board/search_eception/',  // Adjust the URL to match your Django setup
               data: data,
               success: function(response) {
                   console.log(response);
@@ -290,16 +309,19 @@
                   // Example: Display results in a table
                   var resultsTable = $('#searchResults');
                   resultsTable.empty();
-                  $.each(response.test_records, function(index, record) {
-                      var row = '<tr>' +
-                          '<td>' + record.board__project_name + '</td>' +
-                          '<td>' + record.start_time + '</td>' +
-                          '<td>' + record.stop_time + '</td>' +
-                          '<td>' + record.station_type + '</td>' +
-                          '<td>' + record.result + '</td>' +
-                          '</tr>';
-                      resultsTable.append(row);
-                  });
+                  $.each(response.results, function (index, result) {
+                        var row = '<tr>' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td>' + result.board.serial_number + '</td>' +
+                            '<td>' + result.test_record.start_time + '</td>' +
+                            '<td>' + result.board.project_name + '</td>' +
+                            '<td>' + result.test_record.station_type + '</td>' +
+                            '<td>' + result.board.status + '</td>' +
+                            '<td>' + (result.error_records.length > 0 ? result.error_records[0].fail_message : '') + '</td>' +
+                            '<td>' + result.test_record.site + '</td>' +
+                            '</tr>';
+                        resultsTable.append(row);
+                    });
               },
               error: function(error) {
                   alert('Error submitting data.');
@@ -312,7 +334,7 @@
       var serialNumber = $('#serialNumber').val();
       $.ajax({
           type: 'POST',
-          url: '#/',  // Adjust the URL to match your Django setup
+          url: '/board/search_serial_number_in_eception_page/',  // Adjust the URL to match your Django setup
           data: { serialNumber: serialNumber },
           success: function(response) {
               $('#searchResult').html('<pre>' + JSON.stringify(response.test_records, null, 2) + '</pre>');

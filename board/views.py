@@ -1,30 +1,23 @@
-from datetime import datetime
 import os
-from django.shortcuts import render,redirect
-from django.template import loader
 import re
+from datetime import datetime
 
 from mysite import settings
-from .models import Board
-from .models import TestRecord
-from .models import TestSchedule
+from board.common import get_request
+from .models import *
 from .form import EnvReportForm,EditTestPlanForm,DisplayEditTestPlanForm
 from openpyxl import load_workbook
 
-from django.http import HttpResponse,HttpResponseRedirect,Http404,JsonResponse
+from django.template import loader
+from django.shortcuts import render,redirect
+from django.db.models import Q
+from django.http import HttpResponseRedirect,JsonResponse
 from django.contrib import messages
 from django.template.loader import render_to_string
-
 from django.core.exceptions import ObjectDoesNotExist
-
-from django.db.models import OuterRef, Subquery
-
 # ban csrf
 from django.views.decorators.csrf import csrf_exempt
 
-from board.common import get_request
-
-from collections import Counter
 
 # 定义字符串列表
 STATIONS_STRINGS = ["ICT","DFU","FCT","SOC-TEST","WIFI-BT-COND-B","WIFI-BT-COND"]
@@ -612,21 +605,81 @@ def edit_test_plan(request,item_id):
 
 @csrf_exempt
 def eception_page(request):
-    return render(request, "board/eception_page.html")
+    project_name_set=Board.objects.values_list('project_name',flat=True).distinct()
+    station_type_set = TestRecord.objects.exclude(station_type__in=['checkin', 'checkout']).values_list('station_type', flat=True).distinct()
+    context={"project_name_list":list(project_name_set),"station_type_list":list(station_type_set)}
+    return render(request, "board/eception_page.html",context)
 
-from django.db.models import Q
-
+@csrf_exempt
 def search_eception(request):
     if request.method == 'POST':
         start_time = request.POST.get('startTime')
         end_time = request.POST.get('endTime')
         project_name = request.POST.get('project')
         station_type = request.POST.get('station')
-
-        test_records_data=[]
-        return JsonResponse({'test_records': test_records_data})
+        
+        # Initialize query filters
+        test_record_filters = Q()
+        board_filters = ~Q(status='testing') & ~Q(status='archived')
+        
+        # Add filters based on user input
+        if start_time and end_time:
+            test_record_filters &= Q(start_time__gte=start_time, stop_time__lte=end_time)
+        
+        if project_name:
+            board_filters &= Q(project_name=project_name)
+        
+        if station_type:
+            test_record_filters &= Q(station_type=station_type)
+        
+        # Retrieve TestRecords based on filters
+        test_records = TestRecord.objects.filter(test_record_filters)
+        
+        # Retrieve Boards based on filters
+        boards = Board.objects.filter(board_filters)
+        
+        # Combine the results
+        results = []
+        for test_record in test_records:
+            board = test_record.board
+            if board in boards:
+                error_records = ErrorRecord.objects.filter(board=board, test_record=test_record)
+                results.append({
+                    'board': {
+                        'project_name': board.project_name,
+                        'project_config': board.project_config,
+                        'subprotject_name': board.subprotject_name,
+                        'serial_number': board.serial_number,
+                        'configration': board.configration,
+                        'board_number': board.board_number,
+                        'test_item_name': board.test_item_name,
+                        'cp_nums': board.cp_nums,
+                        'product_code': board.product_code,
+                        'APN': board.APN,
+                        'HHPN': board.HHPN,
+                        'first_GS_sn': board.first_GS_sn,
+                        'second_GS_sn': board.second_GS_sn,
+                        'env_finished_flag': board.env_finished_flag,
+                        'status': board.status,
+                    },
+                    'test_record': {
+                        'station_type': test_record.station_type,
+                        'start_time': test_record.start_time,
+                        'cp_nums': test_record.cp_nums,
+                        'stop_time': test_record.stop_time,
+                        'result': test_record.result,
+                        'site': test_record.site,
+                        'operator': test_record.operator,
+                        'remark': test_record.remark,
+                    },
+                    'error_records': list(error_records.values('fail_message', 'remark'))
+                })
+        print(results)
+        return JsonResponse({'results': results})
+    
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
+@csrf_exempt
 def search_serial_number_in_eception_page(request):
     if request.method == 'POST':
         serial_number = request.POST.get('serialNumber')
