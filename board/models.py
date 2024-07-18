@@ -16,6 +16,14 @@ class Board(models.Model):
     first_GS_sn=models.CharField(max_length=50,default='')
     second_GS_sn=models.CharField(max_length=50,default='')
     env_finished_flag = models.BooleanField(default=False)
+    STATUS_CHOICES={
+        "testing":"testing",
+        "pause":"pause",
+        "cancel":"cancel",
+        "cut":"cut",
+        "archived":"archived",
+    }
+    status=models.CharField(max_length=10,choices=STATUS_CHOICES,default='testing')
     def __str__(self):
         return f"{self.project_name}-{self.project_config}-{self.subprotject_name},no={self.board_number},cp={self.cp_nums})"    
 
@@ -23,6 +31,7 @@ class TestRecord(models.Model):
     STATUS_CHOICES={
         "pass":"pass",
         "fail":"fail",
+        "cof":"cof",
     }
     board=models.ForeignKey(Board,on_delete=models.CASCADE)
     station_type=models.CharField(max_length=50)
@@ -33,7 +42,7 @@ class TestRecord(models.Model):
     site=models.CharField(max_length=20,default='FXLH')
     operator=models.CharField(max_length=50,default='')
     remark=models.CharField(max_length=500,default='')
-    def __str__(self):
+    def __str__(self): 
         return f"board_num={self.board.board_number},station_type={self.station_type},cp_num={self.cp_nums},start_time={self.start_time},TestResult(result={self.result})"
     
 class TestSchedule(models.Model):
@@ -51,15 +60,7 @@ class ErrorRecord(models.Model):
     # String fields for failure message and remarks
     fail_message = models.CharField(max_length=255)
     remark = models.CharField(max_length=255)
-
-    # Choices for fail type
-    FAIL_TYPES = (
-        ('COF', 'COF'),
-        ('CANCEL', 'CANCEL'),
-        ('ANALYSIS', 'ANALYSIS'),
-    )
-    fail_type = models.CharField(max_length=10, choices=FAIL_TYPES)
-
+    
     # File field for failure picture
     # fail_picture = models.ImageField(upload_to='failures/%Y/%m/%d/')
 
