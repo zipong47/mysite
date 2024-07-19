@@ -19,6 +19,7 @@ class Board(models.Model):
     STATUS_CHOICES={
         "testing":"testing",
         "pause":"pause",
+        "damage":"damage",
         "cancel":"cancel",
         "cut":"cut",
         "archived":"archived",
@@ -56,6 +57,15 @@ class ErrorRecord(models.Model):
     # Foreign keys to Board and TestRecord
     board = models.ForeignKey(Board, on_delete=models.CASCADE)
     test_record = models.ForeignKey(TestRecord, on_delete=models.CASCADE)
+    radar=models.CharField(max_length=50,default='')
+    # Integer fields for cp number
+    cp_nums = models.IntegerField(default=0)
+    # String fields for status
+    STATUS_CHOICES = {
+        "ongoing": "ongoing",
+        "finish": "finish",
+    }
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ongoing')
     
     # String fields for failure message and remarks
     fail_message = models.CharField(max_length=255)
