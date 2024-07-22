@@ -18,5 +18,7 @@ urlpatterns = [
     path('eception_page/', views.eception_page, name='eception_page'),
     path('search_eception/', views.search_eception, name='search_eception'),
     path('create_error_record/', views.create_error_record, name='create_error_record'),
+    path('edit_error_record/<int:error_record_id>/', views.edit_error_record, name='edit_error_record'),
+    path('get_error_record/<int:error_record_id>/', views.get_error_record, name='get_error_record'),
     path('search_serial_number_in_eception_page/', views.search_serial_number_in_eception_page, name='search_serial_number_in_eception_page'),
 ]

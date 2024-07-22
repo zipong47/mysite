@@ -615,7 +615,7 @@ def eception_page(request):
 def search_eception(request):
     if request.method == 'POST':
         start_time = request.POST.get('startTime')
-        end_time = request.POST.get('endTime')
+        end_time = request.POST.get('EndTime')
         project_name = request.POST.get('project')
         station_type = request.POST.get('station')
         
@@ -645,36 +645,41 @@ def search_eception(request):
             error_records = test_record.error_records.all()
             if error_records.exists():
                 board = test_record.board
-                results.append({
-                    'board': {
-                        'project_name': board.project_name,
-                        'project_config': board.project_config,
-                        'subproject_name': board.subproject_name,
-                        'serial_number': board.serial_number,
-                        'configuration': board.configuration,
-                        'board_number': board.board_number,
-                        'test_item_name': board.test_item_name,
-                        'cp_nums': board.cp_nums,
-                        'product_code': board.product_code,
-                        'APN': board.APN,
-                        'HHPN': board.HHPN,
-                        'first_GS_sn': board.first_GS_sn,
-                        'second_GS_sn': board.second_GS_sn,
-                        'env_finished_flag': board.env_finished_flag,
-                        'status': board.status,
-                    },
-                    'test_record': {
-                        'station_type': test_record.station_type,
-                        'start_time': test_record.start_time,
-                        'cp_nums': test_record.cp_nums,
-                        'stop_time': test_record.stop_time,
-                        'result': test_record.result,
-                        'site': test_record.site,
-                        'operator': test_record.operator,
-                        'remark': test_record.remark,
-                    },
-                    'error_records': list(error_records.values('fail_message', 'remark'))
-                })
+                for error_record in error_records:
+                    results.append({
+                        'board': {
+                            'project_name': board.project_name,
+                            'project_config': board.project_config,
+                            'subproject_name': board.subproject_name,
+                            'serial_number': board.serial_number,
+                            'configuration': board.configuration,
+                            'board_number': board.board_number,
+                            'test_item_name': board.test_item_name,
+                            'cp_nums': board.cp_nums,
+                            'product_code': board.product_code,
+                            'APN': board.APN,
+                            'HHPN': board.HHPN,
+                            'first_GS_sn': board.first_GS_sn,
+                            'second_GS_sn': board.second_GS_sn,
+                            'env_finished_flag': board.env_finished_flag,
+                            'status': board.status,
+                        },
+                        'test_record': {
+                            'station_type': test_record.station_type,
+                            'start_time': test_record.start_time,
+                            'cp_nums': test_record.cp_nums,
+                            'stop_time': test_record.stop_time,
+                            'result': test_record.result,
+                            'site': test_record.site,
+                            'operator': test_record.operator,
+                            'remark': test_record.remark,
+                        },
+                        'error_record': {
+                            'id': error_record.id,
+                            'fail_message': error_record.fail_message,
+                            'remark': error_record.remark,
+                        }
+                    })
         
         if not results:
             print("results结果如下")
@@ -730,6 +735,8 @@ def create_error_record(request):
 
         try:
             board = Board.objects.get(serial_number=serial_number)
+            if ErrorRecord.objects.filter(board=board, status='ongoing').exists():
+                return JsonResponse({'error': 'There is already an ongoing ErrorRecord for this board.'}, status=400)
             test_record = TestRecord.objects.get(id=test_record_id)
             error_record = ErrorRecord.objects.create(
                 board=board,
@@ -749,4 +756,63 @@ def create_error_record(request):
             return JsonResponse({'error': 'Board not found.'}, status=404)
         except TestRecord.DoesNotExist:
             return JsonResponse({'error': 'Test record not found.'}, status=404)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+@csrf_exempt
+def edit_error_record(request, error_record_id):
+    if request.method == 'POST':
+        radar = request.POST.get('radar')
+        cp_nums = request.POST.get('cp_nums')
+        fail_message = request.POST.get('fail_message')
+        remark = request.POST.get('remark')
+        test_record_id = request.POST.get('test_record')
+        board_status = request.POST.get('board_status')
+        fail_picture = request.FILES.get('fail_picture')
+
+        try:
+            error_record = ErrorRecord.objects.get(id=error_record_id)
+            test_record = TestRecord.objects.get(id=test_record_id)
+
+            error_record.radar = radar
+            error_record.cp_nums = cp_nums
+            error_record.fail_message = fail_message
+            error_record.remark = remark
+            error_record.test_record = test_record
+
+            if fail_picture:
+                error_record.fail_picture = fail_picture
+
+            error_record.save()
+
+            board = error_record.board
+            board.status = board_status
+            board.save()
+
+            return JsonResponse({'success': 'Error record updated successfully.'})
+        except ErrorRecord.DoesNotExist:
+            return JsonResponse({'error': 'Error record not found.'}, status=404)
+        except TestRecord.DoesNotExist:
+            return JsonResponse({'error': 'Test record not found.'}, status=404)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+@csrf_exempt
+def get_error_record(request, error_record_id):
+    if request.method == 'GET':
+        try:
+            error_record = ErrorRecord.objects.get(id=error_record_id)
+            test_records = TestRecord.objects.filter(board=error_record.board, cp_nums=error_record.board.cp_nums)
+            error_record_data = {
+                'id': error_record.pk,
+                'radar': error_record.radar,
+                'cp_nums': error_record.cp_nums,
+                'fail_message': error_record.fail_message,
+                'remark': error_record.remark,
+                'test_record_id': error_record.test_record,
+                'fail_picture_url': error_record.fail_picture.url if error_record.fail_picture else None
+            }
+            test_records_data = list(test_records.values('id', 'station_type', 'start_time', 'stop_time', 'result'))
+            board_status = error_record.board.status
+            return JsonResponse({'error_record': error_record_data, 'test_records': test_records_data, 'board_status': board_status})
+        except ErrorRecord.DoesNotExist:
+            return JsonResponse({'error': 'Error record not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
