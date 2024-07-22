@@ -17,5 +17,6 @@ urlpatterns = [
     path('show_history/<str:type>/', views.show_history, name='show_history'),
     path('eception_page/', views.eception_page, name='eception_page'),
     path('search_eception/', views.search_eception, name='search_eception'),
+    path('create_error_record/', views.create_error_record, name='create_error_record'),
     path('search_serial_number_in_eception_page/', views.search_serial_number_in_eception_page, name='search_serial_number_in_eception_page'),
 ]

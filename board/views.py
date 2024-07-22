@@ -17,6 +17,7 @@ from django.template.loader import render_to_string
 from django.core.exceptions import ObjectDoesNotExist
 # ban csrf
 from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
 
 
 # 定义字符串列表
@@ -52,7 +53,7 @@ def index(request):
         config_set=Board.objects.filter(project_name=project_name).values_list('project_config',flat=True).distinct()
         for each in config_set:
             temp_list=[]
-            build_name_set=Board.objects.filter(project_name=project_name,project_config=each).values_list('subprotject_name',flat=True).distinct()
+            build_name_set=Board.objects.filter(project_name=project_name,project_config=each).values_list('subproject_name',flat=True).distinct()
             for build_name in build_name_set:
                 temp_list.append(build_name)
             temp_dit[each]=temp_list
@@ -61,9 +62,9 @@ def index(request):
     for project_name in project_name_set:
         config_set=Board.objects.filter(project_name=project_name).values_list('project_config',flat=True).distinct()
         for config in config_set:
-            build_name_set=Board.objects.filter(project_name=project_name,project_config=config).values_list('subprotject_name',flat=True).distinct()
+            build_name_set=Board.objects.filter(project_name=project_name,project_config=config).values_list('subproject_name',flat=True).distinct()
             for build_name in build_name_set:
-                checkin_set=Board.objects.filter(project_name=project_name,project_config=config,subprotject_name=build_name).filter(env_finished_flag=True)
+                checkin_set=Board.objects.filter(project_name=project_name,project_config=config,subproject_name=build_name).filter(env_finished_flag=True)
                 nums=len(checkin_set)
                 bu=build_unit(project_name=project_name,config=config,build_name=build_name,checkin_nums=nums)
                 station_type_list=["ICT","DFU","FCT","SOC-TEST","WIFI-BT-COND","WIFI-BT-COND-B","W3","SWDL"]
@@ -380,12 +381,12 @@ def get_env_report(request):
             total_rows=worksheet.max_row
             for each in worksheet.iter_rows(min_row=3):
                 sn=each[4].value
-                configration=each[3].value
+                configuration=each[3].value
                 board_num=each[2].value
                 test_item=each[5].value
                 cp_num=handle_cp_str(each[6].value)
-                a_board=Board(project_name=project_name,project_config=project_config,subprotject_name=subproject_name,
-                            serial_number=sn,configration=configration,board_number=board_num,
+                a_board=Board(project_name=project_name,project_config=project_config,subproject_name=subproject_name,
+                            serial_number=sn,configuration=configuration,board_number=board_num,
                             test_item_name=test_item,cp_nums=cp_num)
                 a_board.save()
             # return HttpResponseRedirect("/board/get_env_report")
@@ -459,7 +460,7 @@ def enter_test_plan(request):
     for project_name in project_name_set:
         config_set=Board.objects.filter(project_name=project_name).values_list('project_config',flat=True).distinct()
         for each in config_set:
-            build_name_set=Board.objects.filter(project_name=project_name,project_config=each).values_list('subprotject_name',flat=True).distinct()
+            build_name_set=Board.objects.filter(project_name=project_name,project_config=each).values_list('subproject_name',flat=True).distinct()
             for build_name in build_name_set:
                 # str=str(project_name)+str(each)+str(build_name)
                 str=project_name+"-"+each+"-"+build_name
@@ -477,7 +478,7 @@ def enter_test_plan(request):
         
         exist_test_schedule=[]
         test_plan_list=[]
-        board_query_set=Board.objects.filter(project_name=project_name,project_config=config_name,subprotject_name=build_name)
+        board_query_set=Board.objects.filter(project_name=project_name,project_config=config_name,subproject_name=build_name)
         for board in board_query_set:
             for cp in checkpoint_list:
                 if TestSchedule.objects.filter(serial_number=board,cp_nums=cp).exists():
@@ -510,7 +511,7 @@ def search_test_plan(request):
     for project_name in project_name_set:
         config_set=Board.objects.filter(project_name=project_name).values_list('project_config',flat=True).distinct()
         for each in config_set:
-            build_name_set=Board.objects.filter(project_name=project_name,project_config=each).values_list('subprotject_name',flat=True).distinct()
+            build_name_set=Board.objects.filter(project_name=project_name,project_config=each).values_list('subproject_name',flat=True).distinct()
             for build_name in build_name_set:
                 str=project_name+"-"+each+"-"+build_name
                 project_config_build_list.append(str)
@@ -530,7 +531,7 @@ def search_test_plan(request):
                 messages.error(request,"不存在该SN的板子!请检查该SN是否存在:"+sn)
                 return render(request, "board/enter_test_plan.html",context)
             
-            str=board.project_name+"-"+board.project_config+"-"+board.subprotject_name
+            str=board.project_name+"-"+board.project_config+"-"+board.subproject_name
             test_schedule_set=TestSchedule.objects.filter(serial_number=board)
             if len(test_schedule_set)==0:
                 messages.error(request,"该sn的板子没有测试计划!")
@@ -546,12 +547,12 @@ def search_test_plan(request):
         except ValueError:
             messages.error(request,"正在使用Project-Configuration-Build搜索，但输入的格式有误，请使用符号(-)进行分割每个名称。")
             return render(request, "board/enter_test_plan.html",context)
-        board_set=Board.objects.filter(project_name=project_name,project_config=config_name,subprotject_name=build_name)
+        board_set=Board.objects.filter(project_name=project_name,project_config=config_name,subproject_name=build_name)
         if len(board_set) == 0:
             messages.error(request,"该build不存在，请确认是否已经录入或者是否输入错误!")
         else:   
             for board in board_set:
-                str=board.project_name+"-"+board.project_config+"-"+board.subprotject_name
+                str=board.project_name+"-"+board.project_config+"-"+board.subproject_name
                 test_schedule_set=TestSchedule.objects.filter(serial_number=board)
                 for each in test_schedule_set:
                     plan_unit=test_plan_unit(str,each.cp_nums,board.board_number,each.test_sequence)
@@ -632,55 +633,55 @@ def search_eception(request):
         if station_type:
             test_record_filters &= Q(station_type=station_type)
         
-        # Retrieve TestRecords based on filters
-        test_records = TestRecord.objects.filter(test_record_filters)
-        
         # Retrieve Boards based on filters
         boards = Board.objects.filter(board_filters)
+        
+        # Retrieve TestRecords based on filters and filter by the retrieved boards
+        test_records = TestRecord.objects.filter(test_record_filters, board__in=boards)
         
         # Combine the results
         results = []
         for test_record in test_records:
-            board = test_record.board
-            if board in boards:
-                # error_records = ErrorRecord.objects.filter(board=board, test_record=test_record)
-                error_records = test_record.error_records.all().first()
-                if error_records.exists():
-                    results.append({
-                        'board': {
-                            'project_name': board.project_name,
-                            'project_config': board.project_config,
-                            'subprotject_name': board.subprotject_name,
-                            'serial_number': board.serial_number,
-                            'configration': board.configration,
-                            'board_number': board.board_number,
-                            'test_item_name': board.test_item_name,
-                            'cp_nums': board.cp_nums,
-                            'product_code': board.product_code,
-                            'APN': board.APN,
-                            'HHPN': board.HHPN,
-                            'first_GS_sn': board.first_GS_sn,
-                            'second_GS_sn': board.second_GS_sn,
-                            'env_finished_flag': board.env_finished_flag,
-                            'status': board.status,
-                        },
-                        'test_record': {
-                            'station_type': test_record.station_type,
-                            'start_time': test_record.start_time,
-                            'cp_nums': test_record.cp_nums,
-                            'stop_time': test_record.stop_time,
-                            'result': test_record.result,
-                            'site': test_record.site,
-                            'operator': test_record.operator,
-                            'remark': test_record.remark,
-                        },
-                        'error_records': list(error_records.values('fail_message', 'remark'))
-                    })
-        if len(results) == 0:
+            error_records = test_record.error_records.all()
+            if error_records.exists():
+                board = test_record.board
+                results.append({
+                    'board': {
+                        'project_name': board.project_name,
+                        'project_config': board.project_config,
+                        'subproject_name': board.subproject_name,
+                        'serial_number': board.serial_number,
+                        'configuration': board.configuration,
+                        'board_number': board.board_number,
+                        'test_item_name': board.test_item_name,
+                        'cp_nums': board.cp_nums,
+                        'product_code': board.product_code,
+                        'APN': board.APN,
+                        'HHPN': board.HHPN,
+                        'first_GS_sn': board.first_GS_sn,
+                        'second_GS_sn': board.second_GS_sn,
+                        'env_finished_flag': board.env_finished_flag,
+                        'status': board.status,
+                    },
+                    'test_record': {
+                        'station_type': test_record.station_type,
+                        'start_time': test_record.start_time,
+                        'cp_nums': test_record.cp_nums,
+                        'stop_time': test_record.stop_time,
+                        'result': test_record.result,
+                        'site': test_record.site,
+                        'operator': test_record.operator,
+                        'remark': test_record.remark,
+                    },
+                    'error_records': list(error_records.values('fail_message', 'remark'))
+                })
+        
+        if not results:
             print("results结果如下")
             print(results)
-            customize_message_html = render_to_string('board/customize_message.html', {'message': '未找到符合条件的记录'},request=request)
-            return JsonResponse({'results': results,'customize_message':customize_message_html})
+            customize_message_html = render_to_string('board/customize_message.html', {'customize_message': '未找到符合条件的记录'}, request=request)
+            return JsonResponse({'results': results, 'customize_message': customize_message_html})
+
         return JsonResponse({'results': results})
     
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
@@ -691,9 +692,61 @@ def search_serial_number_in_eception_page(request):
         serial_number = request.POST.get('serialNumber')
         try:
             board = Board.objects.get(serial_number=serial_number)
-            test_records = TestRecord.objects.filter(board=board)
-            test_records_data = list(test_records.values('station_type', 'start_time', 'stop_time', 'result'))
-            return JsonResponse({'test_records': test_records_data})
+            test_records = TestRecord.objects.filter(board=board, cp_nums=board.cp_nums)
+            board_data = {
+                'project_name': board.project_name,
+                'project_config': board.project_config,
+                'subproject_name': board.subproject_name,
+                'serial_number': board.serial_number,
+                'configuration': board.configuration,
+                'board_number': board.board_number,
+                'test_item_name': board.test_item_name,
+                'cp_nums': board.cp_nums,
+                'product_code': board.product_code,
+                'APN': board.APN,
+                'HHPN': board.HHPN,
+                'first_GS_sn': board.first_GS_sn,
+                'second_GS_sn': board.second_GS_sn,
+                'env_finished_flag': board.env_finished_flag,
+                'status': board.status,
+            }
+            test_records_data = list(test_records.values('id', 'station_type', 'start_time', 'stop_time', 'result'))
+            return JsonResponse({'board': board_data, 'test_records': test_records_data})
         except Board.DoesNotExist:
             return JsonResponse({'error': 'Serial number not found.'}, status=404)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+@csrf_exempt
+def create_error_record(request):
+    if request.method == 'POST':
+        serial_number = request.POST.get('serial_number')
+        radar = request.POST.get('radar')
+        cp_nums = request.POST.get('cp_nums')
+        fail_message = request.POST.get('fail_message')
+        remark = request.POST.get('remark')
+        test_record_id = request.POST.get('test_record')
+        board_status = request.POST.get('board_status')
+        fail_picture = request.FILES.get('fail_picture')
+
+        try:
+            board = Board.objects.get(serial_number=serial_number)
+            test_record = TestRecord.objects.get(id=test_record_id)
+            error_record = ErrorRecord.objects.create(
+                board=board,
+                radar=radar,
+                cp_nums=cp_nums,
+                status='ongoing',  # Always set to 'ongoing'
+                fail_message=fail_message,
+                remark=remark,
+                test_record=test_record,
+                fail_picture=fail_picture
+            )
+            board.status = board_status
+            board.save()
+
+            return JsonResponse({'success': 'Error record created successfully.'})
+        except Board.DoesNotExist:
+            return JsonResponse({'error': 'Board not found.'}, status=404)
+        except TestRecord.DoesNotExist:
+            return JsonResponse({'error': 'Test record not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=400)

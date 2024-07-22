@@ -32,18 +32,18 @@ class EditTestPlanForm(forms.ModelForm):
 class DisplayEditTestPlanForm(forms.ModelForm):
     class Meta:
         model=Board
-        fields=['project_name','project_config','subprotject_name','serial_number','board_number']
+        fields=['project_name','project_config','subproject_name','serial_number','board_number']
         labels = {
             "project_name": gettext_lazy("Project"),
             "project_config": gettext_lazy("Config"),
-            "subprotject_name": gettext_lazy("Build"),
+            "subproject_name": gettext_lazy("Build"),
             "serial_number": gettext_lazy("SN"),
             "board_number": gettext_lazy("Board NO."),
         }
         widgets = {
             'project_name': forms.TextInput(attrs={'readonly': 'readonly'}),
             'project_config': forms.TextInput(attrs={'readonly': 'readonly'}),
-            'subprotject_name': forms.TextInput(attrs={'readonly': 'readonly'}),
+            'subproject_name': forms.TextInput(attrs={'readonly': 'readonly'}),
             'serial_number': forms.TextInput(attrs={'readonly': 'readonly'}),
             'board_number': forms.TextInput(attrs={'readonly': 'readonly'}),
         }

@@ -3,9 +3,9 @@ from django.db import models
 class Board(models.Model):
     project_name=models.CharField(max_length=200)
     project_config=models.CharField(max_length=50,default='C')
-    subprotject_name=models.CharField(max_length=200)
+    subproject_name=models.CharField(max_length=200)
     serial_number=models.CharField(primary_key=True,max_length=200)
-    configration=models.CharField(max_length=200)
+    configuration=models.CharField(max_length=200)
     board_number=models.IntegerField()
     test_item_name=models.CharField(max_length=100)
     cp_nums = models.IntegerField(default=0)
@@ -26,7 +26,7 @@ class Board(models.Model):
     }
     status=models.CharField(max_length=10,choices=STATUS_CHOICES,default='testing')
     def __str__(self):
-        return f"{self.project_name}-{self.project_config}-{self.subprotject_name},no={self.board_number},cp={self.cp_nums})"    
+        return f"{self.project_name}-{self.project_config}-{self.subproject_name},no={self.board_number},cp={self.cp_nums})"    
 
 class TestRecord(models.Model):
     STATUS_CHOICES={
@@ -72,7 +72,7 @@ class ErrorRecord(models.Model):
     remark = models.CharField(max_length=255,default='')
     
     # File field for failure picture
-    # fail_picture = models.ImageField(upload_to='failures/%Y/%m/%d/')
+    fail_picture = models.ImageField(upload_to='failures/%Y/%m/%d/', blank=True, null=True)
 
     def __str__(self):
-        return f"ErrorRecord for {self.board.serial_number} on {self.test_record.cp_nums}"
+        return f"ErrorRecord for {self.board.serial_number} with {self.test_record.count()} test records"

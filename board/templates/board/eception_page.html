@@ -243,22 +243,60 @@
 <!-- Modal -->
 <div class="modal fade" id="addMoreModal" tabindex="-1" aria-labelledby="addMoreModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addMoreModalLabel">Add More</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="serialNumberForm">
-          <div class="mb-3">
-            <label for="serialNumber" class="form-label">Serial Number</label>
-            <input type="text" class="form-control" id="serialNumber" name="serialNumber">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="addMoreModalLabel">Add More</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <button type="button" class="btn btn-primary" onclick="searchSerialNumber()">Search</button>
-        </form>
-        <div id="searchResult"></div>
+          <div class="modal-body">
+              <form id="serialNumberForm">
+                  <div class="mb-3">
+                      <label for="serialNumber" class="form-label">Serial Number</label>
+                      <input type="text" class="form-control" id="serialNumber" name="serialNumber">
+                  </div>
+                  <button type="button" class="btn btn-primary" onclick="searchSerialNumber()">Search</button>
+              </form>
+              <div id="searchResult"></div>
+              <hr>
+              <form id="errorRecordForm" enctype="multipart/form-data">
+                  <div class="mb-3">
+                      <label for="radar" class="form-label">Radar</label>
+                      <input type="text" class="form-control" id="radar" name="radar">
+                  </div>
+                  <div class="mb-3">
+                      <label for="cp_nums" class="form-label">CP Numbers</label>
+                      <input type="text" class="form-control" id="cp_nums" name="cp_nums" readonly>
+                  </div>
+                  <div class="mb-3">
+                      <label for="fail_message" class="form-label">Fail Message</label>
+                      <input type="text" class="form-control" id="fail_message" name="fail_message">
+                  </div>
+                  <div class="mb-3">
+                      <label for="remark" class="form-label">Remark</label>
+                      <input type="text" class="form-control" id="remark" name="remark">
+                  </div>
+                  <div class="mb-3">
+                      <label for="test_record" class="form-label">Select Test Record</label>
+                      <select class="form-control" id="test_record" name="test_record">
+                          <!-- Options will be populated dynamically -->
+                      </select>
+                  </div>
+                  <div class="mb-3">
+                      <label for="board_status" class="form-label">Board Status</label>
+                      <select class="form-control" id="board_status" name="board_status">
+                          <option value="damage">Damage</option>
+                          <option value="cancel">Cancel</option>
+                          <option value="cut">Cut</option>
+                      </select>
+                  </div>
+                  <div class="mb-3">
+                      <label for="fail_picture" class="form-label">Fail Picture</label>
+                      <input type="file" class="form-control" id="fail_picture" name="fail_picture">
+                  </div>
+                  <button type="button" class="btn btn-primary" onclick="createErrorRecord()">Create Error Record</button>
+              </form>
+          </div>
       </div>
-    </div>
   </div>
 </div>
 
@@ -274,8 +312,6 @@
     // 遍历所有导航项并检查是否匹配当前路径
     $("#ul_header li a").each(function () {
       var a = $(this);
-      console.log("a: " + a.attr("href"));
-      console.log("location.pathname: " + location.pathname);
       if (a.attr("href") === location.pathname) {
         a.addClass("active");
       } else {
@@ -308,12 +344,15 @@
               url: '/board/search_eception/',  // Adjust the URL to match your Django setup
               data: data,
               success: function(response) {
-                  console.log(response);  
                   // Process the response and update the frontend accordingly
                   // Example: Display results in a table
                   var resultsTable = $('#searchResults');
                   resultsTable.empty();
-                  document.getElementById("customize_message_html").innerHTML = response.customize_message;
+
+                  if (response && response.customize_message) {
+                    document.querySelector(".customize_message_html").innerHTML = response.customize_message;
+                  }
+
                   $.each(response.results, function (index, result) {
                         var row = '<tr>' +
                             '<td>' + (index + 1) + '</td>' +
@@ -336,19 +375,77 @@
   });
 
   function searchSerialNumber() {
-      var serialNumber = $('#serialNumber').val();
-      $.ajax({
-          type: 'POST',
-          url: '/board/search_serial_number_in_eception_page/',  // Adjust the URL to match your Django setup
-          data: { serialNumber: serialNumber },
-          success: function(response) {
-              $('#searchResult').html('<pre>' + JSON.stringify(response.test_records, null, 2) + '</pre>');
-          },
-          error: function(error) {
-              $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
-          }
-      });
-  }
+        var serialNumber = $('#serialNumber').val();
+        $.ajax({
+            type: 'POST',
+            url: '/board/search_serial_number_in_eception_page/',  // Adjust the URL to match your Django setup
+            data: { serialNumber: serialNumber },
+            success: function(response) {
+                if (response.error) {
+                    $('#searchResult').html('<div class="alert alert-danger">' + response.error + '</div>');
+                } else {
+                    var board = response.board;
+                    var testRecords = response.test_records;
+
+                    var boardInfo = '<h5>Board Information</h5>' +
+                                    '<p>Project Name: ' + board.project_name + '</p>' +
+                                    '<p>Serial Number: ' + board.serial_number + '</p>' +
+                                    '<p>CP Numbers: ' + board.cp_nums + '</p>' +
+                                    '<p>Status: ' + board.status + '</p>';
+                    var testRecordInfo = '<h5>Test Records</h5><ul>';
+                    var testRecordOptions = '';
+
+                    $.each(testRecords, function(index, record) {
+                        testRecordInfo += '<li>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</li>';
+                        testRecordOptions += '<option value="' + record.id + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
+                    });
+                    testRecordInfo += '</ul>';
+
+                    $('#searchResult').html(boardInfo + testRecordInfo);
+                    $('#cp_nums').val(board.cp_nums);
+                    $('#test_record').html(testRecordOptions);
+                }
+            },
+            error: function(error) {
+                $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
+            }
+        });
+    }
+
+    function createErrorRecord() {
+        var formData = new FormData();
+        formData.append('serial_number', $('#serialNumber').val());
+        formData.append('radar', $('#radar').val());
+        formData.append('cp_nums', $('#cp_nums').val());
+        formData.append('fail_message', $('#fail_message').val());
+        formData.append('remark', $('#remark').val());
+        formData.append('test_record', $('#test_record').val());
+        formData.append('board_status', $('#board_status').val());
+
+        var failPicture = $('#fail_picture')[0].files[0];
+        if (failPicture) {
+            formData.append('fail_picture', failPicture);
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/board/create_error_record/',  // Adjust the URL to match your Django setup
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    alert(response.success);
+                    $('#addMoreModal').modal('hide');
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(error) {
+                alert('Error creating error record.');
+            }
+        });
+    }
 </script>
 </body>
 </html>
