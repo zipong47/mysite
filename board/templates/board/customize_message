@@ -1,0 +1,8 @@
+    <!-- 显示消息 alert-{{ message.tags }} -->
+    {% if customize_message %}
+    <div class="messages" style="margin: 20px;">
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ customize_message }}
+    </div>
+    </div>
+    {% endif %}

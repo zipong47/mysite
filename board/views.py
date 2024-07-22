@@ -619,7 +619,7 @@ def search_eception(request):
         station_type = request.POST.get('station')
         
         # Initialize query filters
-        test_record_filters = Q()
+        test_record_filters = ~Q(result='pass')
         board_filters = ~Q(status='testing') & ~Q(status='archived')
         
         # Add filters based on user input
@@ -643,38 +643,44 @@ def search_eception(request):
         for test_record in test_records:
             board = test_record.board
             if board in boards:
-                error_records = ErrorRecord.objects.filter(board=board, test_record=test_record)
-                results.append({
-                    'board': {
-                        'project_name': board.project_name,
-                        'project_config': board.project_config,
-                        'subprotject_name': board.subprotject_name,
-                        'serial_number': board.serial_number,
-                        'configration': board.configration,
-                        'board_number': board.board_number,
-                        'test_item_name': board.test_item_name,
-                        'cp_nums': board.cp_nums,
-                        'product_code': board.product_code,
-                        'APN': board.APN,
-                        'HHPN': board.HHPN,
-                        'first_GS_sn': board.first_GS_sn,
-                        'second_GS_sn': board.second_GS_sn,
-                        'env_finished_flag': board.env_finished_flag,
-                        'status': board.status,
-                    },
-                    'test_record': {
-                        'station_type': test_record.station_type,
-                        'start_time': test_record.start_time,
-                        'cp_nums': test_record.cp_nums,
-                        'stop_time': test_record.stop_time,
-                        'result': test_record.result,
-                        'site': test_record.site,
-                        'operator': test_record.operator,
-                        'remark': test_record.remark,
-                    },
-                    'error_records': list(error_records.values('fail_message', 'remark'))
-                })
-        print(results)
+                # error_records = ErrorRecord.objects.filter(board=board, test_record=test_record)
+                error_records = test_record.error_records.all().first()
+                if error_records.exists():
+                    results.append({
+                        'board': {
+                            'project_name': board.project_name,
+                            'project_config': board.project_config,
+                            'subprotject_name': board.subprotject_name,
+                            'serial_number': board.serial_number,
+                            'configration': board.configration,
+                            'board_number': board.board_number,
+                            'test_item_name': board.test_item_name,
+                            'cp_nums': board.cp_nums,
+                            'product_code': board.product_code,
+                            'APN': board.APN,
+                            'HHPN': board.HHPN,
+                            'first_GS_sn': board.first_GS_sn,
+                            'second_GS_sn': board.second_GS_sn,
+                            'env_finished_flag': board.env_finished_flag,
+                            'status': board.status,
+                        },
+                        'test_record': {
+                            'station_type': test_record.station_type,
+                            'start_time': test_record.start_time,
+                            'cp_nums': test_record.cp_nums,
+                            'stop_time': test_record.stop_time,
+                            'result': test_record.result,
+                            'site': test_record.site,
+                            'operator': test_record.operator,
+                            'remark': test_record.remark,
+                        },
+                        'error_records': list(error_records.values('fail_message', 'remark'))
+                    })
+        if len(results) == 0:
+            print("results结果如下")
+            print(results)
+            customize_message_html = render_to_string('board/customize_message.html', {'message': '未找到符合条件的记录'},request=request)
+            return JsonResponse({'results': results,'customize_message':customize_message_html})
         return JsonResponse({'results': results})
     
     return JsonResponse({'error': 'Invalid request method.'}, status=400)

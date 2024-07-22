@@ -215,6 +215,10 @@
         </div>
       </div>
 
+      <div class="customize_message_html">
+      
+      </div>
+
       <table class="table mt-4">
         <thead>
           <tr>
@@ -304,11 +308,12 @@
               url: '/board/search_eception/',  // Adjust the URL to match your Django setup
               data: data,
               success: function(response) {
-                  console.log(response);
+                  console.log(response);  
                   // Process the response and update the frontend accordingly
                   // Example: Display results in a table
                   var resultsTable = $('#searchResults');
                   resultsTable.empty();
+                  document.getElementById("customize_message_html").innerHTML = response.customize_message;
                   $.each(response.results, function (index, result) {
                         var row = '<tr>' +
                             '<td>' + (index + 1) + '</td>' +
