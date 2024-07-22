@@ -56,7 +56,7 @@ class TestSchedule(models.Model):
 class ErrorRecord(models.Model):
     # Foreign keys to Board and TestRecord
     board = models.ForeignKey(Board, on_delete=models.CASCADE)
-    test_record = models.ForeignKey(TestRecord, on_delete=models.CASCADE)
+    test_record = models.ManyToManyField(TestRecord, related_name="error_records")
     radar=models.CharField(max_length=50,default='')
     # Integer fields for cp number
     cp_nums = models.IntegerField(default=0)
@@ -68,8 +68,8 @@ class ErrorRecord(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ongoing')
     
     # String fields for failure message and remarks
-    fail_message = models.CharField(max_length=255)
-    remark = models.CharField(max_length=255)
+    fail_message = models.CharField(max_length=255,default='')
+    remark = models.CharField(max_length=255,default='')
     
     # File field for failure picture
     # fail_picture = models.ImageField(upload_to='failures/%Y/%m/%d/')

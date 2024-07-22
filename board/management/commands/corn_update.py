@@ -32,13 +32,6 @@ def find_first_error_station(test_plan, test_record):
         return None, None
     
     return None, None
-
-def get_test_schedule_station(board):
-    current_cp_schedule = TestSchedule.objects.filter(serial_number=board,cp_nums=board.cp_nums)
-    test_sequence = current_cp_schedule.test_sequence
-    test_plan_list = test_sequence.split("→")
-    distinct_test_plan = set(test_plan_list)
-    return distinct_test_plan
  
 class Command(BaseCommand):
     help = "Closes the specified poll for voting"
@@ -68,22 +61,61 @@ class Command(BaseCommand):
                         print("没记录")
                         continue
                 start_time = datetime.strptime(result_dict["start_time"], "%Y-%m-%d %H:%M:%S")
+                stop_time = datetime.strptime(result_dict["stop_time"], "%Y-%m-%d %H:%M:%S")
                 lastest_record=TestRecord.objects.filter(board=board_unit,cp_nums=board_unit.cp_nums,station_type=next_station).order_by("-start_time").first()
                 if (lastest_record != None and start_time <= lastest_record.start_time):
                     print("没记录")
                     continue
-                stop_time = datetime.strptime(result_dict["stop_time"], "%Y-%m-%d %H:%M:%S")
-                record=TestRecord(board=board_unit,station_type=next_station,start_time=start_time,stop_time=stop_time,result=result_dict["result"],cp_nums=board_unit.cp_nums)
-                record.save()
-                
-                if(board_unit.status=="pause"):
-                    if result_dict["result"]=="pass":
-                        board_unit.status="testing"
+                elif (lastest_record == None):
+                    current_record=TestRecord(board=board_unit,station_type=next_station,start_time=start_time,stop_time=stop_time,result=result_dict["result"],cp_nums=board_unit.cp_nums)
+                    current_record.save()
+                    if result_dict["result"]=="fail":
+                        board_unit.status="pause"
                         board_unit.save()
-                        ErrorRecord.objects.filter(board=board_unit,cp_nums=board_unit.cp_nums)
-                    else:
-                        
-        
-        self.stdout.write(
-            self.style.SUCCESS('成功更新数据')
-        )
+                        error_record=ErrorRecord(board=board_unit,cp_nums=board_unit.cp_nums,STATUS_CHOICES='ongoing')
+                        error_record.add(current_record)
+                        error_record.save()
+                    elif result_dict["result"]=="pass":
+                        print("pass")
+                        continue
+                else:
+                    current_record=TestRecord(board=board_unit,station_type=next_station,start_time=start_time,stop_time=stop_time,result=result_dict["result"],cp_nums=board_unit.cp_nums)
+                    if(board_unit.status=="pause"):
+                        if lastest_record.result=="fail":
+                            error_record = lastest_record.error_records.all().first()
+                            if result_dict["result"]=="fail":
+                                error_record.add(current_record)
+                            elif result_dict["result"]=="pass":
+                                board_unit.status="testing"
+                                board_unit.save()
+                                error_record.delete()    
+                                current_record.save()
+                        elif lastest_record.result=="cof":
+                            if result_dict["result"]=="fail":
+                                board_unit.status="testing"
+                                board_unit.save()
+                                current_record.result='cof'
+                                current_record.save()
+                                error_record.add(current_record)
+                                error_record.status='finish'
+                                error_record.save()
+                            elif result_dict["result"]=="pass":
+                                board_unit.status="testing"
+                                board_unit.save()
+                                current_record.save()
+                                error_record.status='finish'
+                                error_record.save()
+                        elif lastest_record.result=='pass':
+                            current_record.save()
+                            print("error,this situation should not exist!!")
+                    elif(board_unit.status=="testing"):
+                        if result_dict["result"]=="fail":
+                            board_unit.status="pause"
+                            board_unit.save()
+                            current_record.save()
+                            error_record=ErrorRecord(board=board_unit,cp_nums=board_unit.cp_nums,STATUS_CHOICES='ongoing')
+                            error_record.add(current_record)
+                            error_record.save()
+                        else:
+                            current_record.save()
+                            print("pass")
