@@ -244,55 +244,56 @@
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editErrorRecordModal" tabindex="-1" aria-labelledby="editErrorRecordModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editErrorRecordModalLabel">Edit Error Record</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editErrorRecordForm" enctype="multipart/form-data">
-                    <input type="hidden" id="edit_error_record_id" name="error_record_id">
-                    <div class="mb-3">
-                        <label for="edit_radar" class="form-label">Radar</label>
-                        <input type="text" class="form-control" id="edit_radar" name="radar">
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_cp_nums" class="form-label">CP Numbers</label>
-                        <input type="text" class="form-control" id="edit_cp_nums" name="cp_nums" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_fail_message" class="form-label">Fail Message</label>
-                        <input type="text" class="form-control" id="edit_fail_message" name="fail_message">
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_remark" class="form-label">Remark</label>
-                        <input type="text" class="form-control" id="edit_remark" name="remark">
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_test_record" class="form-label">Select Test Record</label>
-                        <select class="form-control" id="edit_test_record" name="test_record">
-                            <!-- Options will be populated dynamically -->
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_board_status" class="form-label">Board Status</label>
-                        <select class="form-control" id="edit_board_status" name="board_status">
-                            <option value="damage">Damage</option>
-                            <option value="cancel">Cancel</option>
-                            <option value="cut">Cut</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_fail_picture" class="form-label">Fail Picture</label>
-                        <input type="file" class="form-control" id="edit_fail_picture" name="fail_picture">
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="updateErrorRecord()">Update Error Record</button>
-                </form>
-            </div>
-        </div>
-    </div>
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="editErrorRecordModalLabel">Edit Error Record</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <form id="editErrorRecordForm" enctype="multipart/form-data">
+                  <input type="hidden" id="edit_error_record_serial_number" name="error_record_serial_number">
+                  <div class="mb-3">
+                      <label for="edit_radar" class="form-label">Radar</label>
+                      <input type="text" class="form-control" id="edit_radar" name="radar">
+                  </div>
+                  <div class="mb-3">
+                      <label for="edit_cp_nums" class="form-label">CP Numbers</label>
+                      <input type="text" class="form-control" id="edit_cp_nums" name="cp_nums" readonly>
+                  </div>
+                  <div class="mb-3">
+                      <label for="edit_fail_message" class="form-label">Fail Message</label>
+                      <input type="text" class="form-control" id="edit_fail_message" name="fail_message">
+                  </div>
+                  <div class="mb-3">
+                      <label for="edit_remark" class="form-label">Remark</label>
+                      <input type="text" class="form-control" id="edit_remark" name="remark">
+                  </div>
+                  <div class="mb-3">
+                      <label for="edit_board_status" class="form-label">Board Status</label>
+                      <select class="form-control" id="edit_board_status" name="board_status">
+                          <option value="damage">Damage</option>
+                          <option value="cancel">Cancel</option>
+                          <option value="cut">Cut</option>
+                      </select>
+                  </div>
+                  <div class="mb-3">
+                      <label for="edit_fail_picture" class="form-label">Fail Picture</label>
+                      <input type="file" class="form-control" id="edit_fail_picture" name="fail_picture">
+                  </div>
+                  <div class="mb-3">
+                      <label for="edit_test_records" class="form-label">Test Records</label>
+                      <ul id="edit_test_records">
+                          <!-- Test records will be populated dynamically -->
+                      </ul>
+                  </div>
+                  <button type="button" class="btn btn-primary" onclick="updateErrorRecord()">Update Error Record</button>
+              </form>
+          </div>
+      </div>
+  </div>
 </div>
+
 
 
 <!-- Modal -->
@@ -417,9 +418,11 @@
                             '<td>' + result.board.status + '</td>' +
                             '<td>' + (result.error_record.fail_message) + '</td>' +
                             '<td>' + result.test_record.site + '</td>' +
-                            '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(' + result.error_record.id + ')">Edit</button></td>' +
+                            '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
                             '</tr>';
                         resultsTable.append(row);
+                        console.log("error_record_id: " + result.error_record.id)
+                        console.log(result.error_record)
                     });
                 },
                 error: function(error) {
@@ -467,7 +470,7 @@
     });
   }
 
-    function createErrorRecord() {
+  function createErrorRecord() {
         var formData = new FormData();
         formData.append('serial_number', $('#serialNumber').val());
         formData.append('radar', $('#radar').val());
@@ -503,28 +506,35 @@
     }
 
 
-    function editErrorRecord(errorRecordId) {
+    function editErrorRecord(errorRecordSerialNumber) {
+        console.log("errorRecordSerialNumber: " + errorRecordSerialNumber)
         $.ajax({
             type: 'GET',
-            url: '/board/get_error_record/' + errorRecordId + '/',  // Adjust the URL to match your Django setup
+            url: '/board/get_error_record/' + errorRecordSerialNumber + '/',  // Adjust the URL to match your Django setup
             success: function(response) {
                 if (response.error) {
                     alert(response.error);
                 } else {
                     var errorRecord = response.error_record;
-                    $('#edit_error_record_id').val(errorRecord.id);
+                    $('#edit_error_record_serial_number').val(errorRecord.serial_number);
                     $('#edit_radar').val(errorRecord.radar);
                     $('#edit_cp_nums').val(errorRecord.cp_nums);
                     $('#edit_fail_message').val(errorRecord.fail_message);
                     $('#edit_remark').val(errorRecord.remark);
                     $('#edit_board_status').val(response.board_status);
                     
-                    var testRecordOptions = '';
+                    var testRecordList = '';
                     $.each(response.test_records, function(index, record) {
-                        testRecordOptions += '<option value="' + record.id + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
+                        testRecordList += '<li>' +
+                            '<span>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</span>' +
+                            '<select name="test_record_result_' + record.serial_number + '">' +
+                                '<option value="pass"' + (record.result === 'pass' ? ' selected' : '') + '>Pass</option>' +
+                                '<option value="fail"' + (record.result === 'fail' ? ' selected' : '') + '>Fail</option>' +
+                                '<option value="cof"' + (record.result === 'cof' ? ' selected' : '') + '>COF</option>' +
+                            '</select>' +
+                            '</li>';
                     });
-                    $('#edit_test_record').html(testRecordOptions);
-                    $('#edit_test_record').val(errorRecord.test_record_id);
+                    $('#edit_test_records').html(testRecordList);
 
                     $('#editErrorRecordModal').modal('show');
                 }
@@ -541,7 +551,6 @@
         formData.append('cp_nums', $('#edit_cp_nums').val());
         formData.append('fail_message', $('#edit_fail_message').val());
         formData.append('remark', $('#edit_remark').val());
-        formData.append('test_record', $('#edit_test_record').val());
         formData.append('board_status', $('#edit_board_status').val());
 
         var failPicture = $('#edit_fail_picture')[0].files[0];
@@ -549,11 +558,16 @@
             formData.append('fail_picture', failPicture);
         }
 
-        var errorRecordId = $('#edit_error_record_id').val();
+        $('#edit_test_records li select').each(function() {
+            var select = $(this);
+            formData.append(select.attr('name'), select.val());
+        });
+
+        var errorRecordSerialNumber = $('#edit_error_record_serial_number').val();
 
         $.ajax({
             type: 'POST',
-            url: '/board/edit_error_record/' + errorRecordId + '/',  // Adjust the URL to match your Django setup
+            url: '/board/update_error_record/' + errorRecordSerialNumber + '/',  // Adjust the URL to match your Django setup
             data: formData,
             processData: false,
             contentType: false,
