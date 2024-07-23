@@ -716,7 +716,7 @@ def search_serial_number_in_eception_page(request):
                 'env_finished_flag': board.env_finished_flag,
                 'status': board.status,
             }
-            test_records_data = list(test_records.values('id', 'station_type', 'start_time', 'stop_time', 'result'))
+            test_records_data = list(test_records.values('pk', 'station_type', 'start_time', 'stop_time', 'result'))
             return JsonResponse({'board': board_data, 'test_records': test_records_data})
         except Board.DoesNotExist:
             return JsonResponse({'error': 'Serial number not found.'}, status=404)
@@ -746,56 +746,20 @@ def create_error_record(request):
                 status='ongoing',  # Always set to 'ongoing'
                 fail_message=fail_message,
                 remark=remark,
-                test_record=test_record,
                 fail_picture=fail_picture
             )
+            error_record.test_record.add(test_record)
+            error_record.save()
+            
             board.status = board_status
             board.save()
 
-            return JsonResponse({'success': 'Error record created successfully.'})
+            return JsonResponse({'success': 'Error_record created successfully.'})
         except Board.DoesNotExist:
             return JsonResponse({'error': 'Board not found.'}, status=404)
         except TestRecord.DoesNotExist:
             return JsonResponse({'error': 'Test record not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
-
-# @csrf_exempt
-# def edit_error_record(request, error_record_id):
-#     if request.method == 'POST':
-#         radar = request.POST.get('radar')
-#         cp_nums = request.POST.get('cp_nums')
-#         fail_message = request.POST.get('fail_message')
-#         remark = request.POST.get('remark')
-#         test_record_id = request.POST.get('test_record')
-#         board_status = request.POST.get('board_status')
-#         fail_picture = request.FILES.get('fail_picture')
-
-#         try:
-#             error_record = ErrorRecord.objects.get(id=error_record_id)
-#             test_record = TestRecord.objects.get(id=test_record_id)
-
-#             error_record.radar = radar
-#             error_record.cp_nums = cp_nums
-#             error_record.fail_message = fail_message
-#             error_record.remark = remark
-#             error_record.test_record = test_record
-
-#             if fail_picture:
-#                 error_record.fail_picture = fail_picture
-
-#             error_record.save()
-
-#             if board_status:
-#                 board = error_record.board
-#                 board.status = board_status
-#                 board.save()
-
-#             return JsonResponse({'success': 'Error record updated successfully.'})
-#         except ErrorRecord.DoesNotExist:
-#             return JsonResponse({'error': 'Error record not found.'}, status=404)
-#         except TestRecord.DoesNotExist:
-#             return JsonResponse({'error': 'Test record not found.'}, status=404)
-#     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 @csrf_exempt
 def get_error_record(request, error_record_pk):
@@ -821,7 +785,6 @@ def get_error_record(request, error_record_pk):
 
 @csrf_exempt
 def update_error_record(request, error_record_pk):
-    
     if request.method == 'POST':
         radar = request.POST.get('radar')
         cp_nums = request.POST.get('cp_nums')

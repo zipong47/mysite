@@ -398,9 +398,12 @@
 
                     $.each(testRecords, function(index, record) {
                         testRecordInfo += '<li>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</li>';
-                        testRecordOptions += '<option value="' + record.serial_number + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
+                        testRecordOptions += '<option value="' + record.pk + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
                     });
                     testRecordInfo += '</ul>';
+                    console.log("boardInfo: "+boardInfo);
+                    console.log("testRecordInfo: "+testRecordInfo);
+                    console.log("testRecordOptions: "+testRecordOptions);
 
                     $('#searchResult').html(boardInfo + testRecordInfo);
                     $('#cp_nums').val(board.cp_nums);
@@ -420,7 +423,10 @@
         formData.append('cp_nums', $('#cp_nums').val());
         formData.append('fail_message', $('#fail_message').val());
         formData.append('remark', $('#remark').val());
+
+        console.log("test_record: "+$('#test_record').val());
         formData.append('test_record', $('#test_record').val());
+
         formData.append('board_status', $('#board_status').val());
 
         var failPicture = $('#fail_picture')[0].files[0];
@@ -443,7 +449,7 @@
                 }
             },
             error: function(error) {
-                alert('Error creating error record.');
+                alert('创建Error Record失败.');
             }
         });
     }
