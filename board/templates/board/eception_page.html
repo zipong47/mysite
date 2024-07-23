@@ -295,7 +295,6 @@
 </div>
 
 
-
 <!-- Modal -->
 <div class="modal fade" id="addMoreModal" tabindex="-1" aria-labelledby="addMoreModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -376,62 +375,6 @@
     });
   })
 
-  $(document).ready(function() {
-        flatpickr("#dateTimeRange", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-        });
-
-        $('#timeForm').on('submit', function(e) {
-            e.preventDefault();
-            var dateTimeRange = $('#dateTimeRange').val();
-            var project = $('#projectDropdown').val();
-            var station = $('#stationDropdown').val();
-
-            var data = {
-                startTime: dateTimeRange.split(" to ")[0],
-                endTime: dateTimeRange.split(" to ")[1],
-                project: project,
-                station: station
-            };
-
-            $.ajax({
-                type: 'POST',
-                url: '{% url "search_eception" %}',  // Adjust the URL to match your Django setup
-                data: data,
-                success: function(response) {
-                    // Process the response and update the frontend accordingly
-                    var resultsTable = $('#searchResults');
-                    resultsTable.empty();
-
-                    if (response && response.customize_message) {
-                        $('.customize_message_html').html(response.customize_message);
-                    }
-
-                    $.each(response.results, function(index, result) {
-                        var row = '<tr>' +
-                            '<td>' + (index + 1) + '</td>' +
-                            '<td>' + result.board.serial_number + '</td>' +
-                            '<td>' + result.test_record.start_time + '</td>' +
-                            '<td>' + result.board.project_name + '</td>' +
-                            '<td>' + result.test_record.station_type + '</td>' +
-                            '<td>' + result.board.status + '</td>' +
-                            '<td>' + (result.error_record.fail_message) + '</td>' +
-                            '<td>' + result.test_record.site + '</td>' +
-                            '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
-                            '</tr>';
-                        resultsTable.append(row);
-                        console.log("error_record_id: " + result.error_record.id)
-                        console.log(result.error_record)
-                    });
-                },
-                error: function(error) {
-                    alert('Error submitting data.');
-                }
-            });
-        });
-    });
-
   function searchSerialNumber() {
         var serialNumber = $('#serialNumber').val();
         $.ajax({
@@ -455,7 +398,7 @@
 
                     $.each(testRecords, function(index, record) {
                         testRecordInfo += '<li>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</li>';
-                        testRecordOptions += '<option value="' + record.id + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
+                        testRecordOptions += '<option value="' + record.serial_number + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
                     });
                     testRecordInfo += '</ul>';
 
@@ -463,14 +406,14 @@
                     $('#cp_nums').val(board.cp_nums);
                     $('#test_record').html(testRecordOptions);
                 }
-        },
-        error: function(error) {
-            $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
-        }
-    });
-  }
+            },
+            error: function(error) {
+                $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
+            }
+        });
+    }
 
-  function createErrorRecord() {
+    function createErrorRecord() {
         var formData = new FormData();
         formData.append('serial_number', $('#serialNumber').val());
         formData.append('radar', $('#radar').val());
@@ -505,9 +448,8 @@
         });
     }
 
-
     function editErrorRecord(errorRecordSerialNumber) {
-        console.log("errorRecordSerialNumber: " + errorRecordSerialNumber)
+        console.log("errorRecordSerialNumber: "+errorRecordSerialNumber);
         $.ajax({
             type: 'GET',
             url: '/board/get_error_record/' + errorRecordSerialNumber + '/',  // Adjust the URL to match your Django setup
@@ -525,9 +467,10 @@
                     
                     var testRecordList = '';
                     $.each(response.test_records, function(index, record) {
+                        console.log("record_id: "+record.pk);
                         testRecordList += '<li>' +
                             '<span>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</span>' +
-                            '<select name="test_record_result_' + record.serial_number + '">' +
+                            '<select name="test_record_result_' + record.pk + '">' +
                                 '<option value="pass"' + (record.result === 'pass' ? ' selected' : '') + '>Pass</option>' +
                                 '<option value="fail"' + (record.result === 'fail' ? ' selected' : '') + '>Fail</option>' +
                                 '<option value="cof"' + (record.result === 'cof' ? ' selected' : '') + '>COF</option>' +
@@ -561,10 +504,10 @@
         $('#edit_test_records li select').each(function() {
             var select = $(this);
             formData.append(select.attr('name'), select.val());
+            console.log("formData: "+select.attr('name')+select.val());
         });
 
         var errorRecordSerialNumber = $('#edit_error_record_serial_number').val();
-
         $.ajax({
             type: 'POST',
             url: '/board/update_error_record/' + errorRecordSerialNumber + '/',  // Adjust the URL to match your Django setup
@@ -585,6 +528,60 @@
             }
         });
     }
+
+    $(document).ready(function() {
+        flatpickr("#dateTimeRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+        });
+
+        $('#timeForm').on('submit', function(e) {
+            e.preventDefault();
+            var dateTimeRange = $('#dateTimeRange').val();
+            var project = $('#projectDropdown').val();
+            var station = $('#stationDropdown').val();
+
+            var data = {
+                startTime: dateTimeRange.split(" to ")[0],
+                endTime: dateTimeRange.split(" to ")[1],
+                project: project,
+                station: station
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "search_eception" %}',  // Adjust the URL to match your Django setup
+                data: data,
+                success: function(response) {
+                    var resultsTable = $('#searchResults');
+                    resultsTable.empty();
+
+                    if (response && response.customize_message) {
+                        $('.customize_message_html').html(response.customize_message);
+                    }
+
+                    $.each(response.results, function(index, result) {
+                        var row = '<tr>' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td>' + result.board.serial_number + '</td>' +
+                            '<td>' + result.test_record.start_time + '</td>' +
+                            '<td>' + result.board.project_name + '</td>' +
+                            '<td>' + result.test_record.station_type + '</td>' +
+                            '<td>' + result.board.status + '</td>' +
+                            '<td>' + (result.error_record.fail_message) + '</td>' +
+                            '<td>' + result.test_record.site + '</td>' +
+                            '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
+                            '</tr>';
+                        resultsTable.append(row);
+                        console.log("result.error_record.id: "+result.error_record.id);
+                    });
+                },
+                error: function(error) {
+                    alert('Error submitting data.');
+                }
+            });
+        });
+    });
 </script>
 </body>
 </html>

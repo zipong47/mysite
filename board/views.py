@@ -680,6 +680,7 @@ def search_eception(request):
                             'remark': error_record.remark,
                         }
                     })
+                    print(f"error_record.id:{error_record.id}")
         
         if not results:
             print("results结果如下")
@@ -758,59 +759,60 @@ def create_error_record(request):
             return JsonResponse({'error': 'Test record not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
+# @csrf_exempt
+# def edit_error_record(request, error_record_id):
+#     if request.method == 'POST':
+#         radar = request.POST.get('radar')
+#         cp_nums = request.POST.get('cp_nums')
+#         fail_message = request.POST.get('fail_message')
+#         remark = request.POST.get('remark')
+#         test_record_id = request.POST.get('test_record')
+#         board_status = request.POST.get('board_status')
+#         fail_picture = request.FILES.get('fail_picture')
+
+#         try:
+#             error_record = ErrorRecord.objects.get(id=error_record_id)
+#             test_record = TestRecord.objects.get(id=test_record_id)
+
+#             error_record.radar = radar
+#             error_record.cp_nums = cp_nums
+#             error_record.fail_message = fail_message
+#             error_record.remark = remark
+#             error_record.test_record = test_record
+
+#             if fail_picture:
+#                 error_record.fail_picture = fail_picture
+
+#             error_record.save()
+
+#             if board_status:
+#                 board = error_record.board
+#                 board.status = board_status
+#                 board.save()
+
+#             return JsonResponse({'success': 'Error record updated successfully.'})
+#         except ErrorRecord.DoesNotExist:
+#             return JsonResponse({'error': 'Error record not found.'}, status=404)
+#         except TestRecord.DoesNotExist:
+#             return JsonResponse({'error': 'Test record not found.'}, status=404)
+#     return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
 @csrf_exempt
-def edit_error_record(request, error_record_id):
-    if request.method == 'POST':
-        radar = request.POST.get('radar')
-        cp_nums = request.POST.get('cp_nums')
-        fail_message = request.POST.get('fail_message')
-        remark = request.POST.get('remark')
-        test_record_id = request.POST.get('test_record')
-        board_status = request.POST.get('board_status')
-        fail_picture = request.FILES.get('fail_picture')
-
-        try:
-            error_record = ErrorRecord.objects.get(id=error_record_id)
-            test_record = TestRecord.objects.get(id=test_record_id)
-
-            error_record.radar = radar
-            error_record.cp_nums = cp_nums
-            error_record.fail_message = fail_message
-            error_record.remark = remark
-            error_record.test_record = test_record
-
-            if fail_picture:
-                error_record.fail_picture = fail_picture
-
-            error_record.save()
-
-            board = error_record.board
-            board.status = board_status
-            board.save()
-
-            return JsonResponse({'success': 'Error record updated successfully.'})
-        except ErrorRecord.DoesNotExist:
-            return JsonResponse({'error': 'Error record not found.'}, status=404)
-        except TestRecord.DoesNotExist:
-            return JsonResponse({'error': 'Test record not found.'}, status=404)
-    return JsonResponse({'error': 'Invalid request method.'}, status=400)
-
-@csrf_exempt
-def get_error_record(request, error_record_serial_number):
+def get_error_record(request, error_record_pk):
     if request.method == 'GET':
         try:
-            error_record = ErrorRecord.objects.get(serial_number=error_record_serial_number)
+            error_record = ErrorRecord.objects.get(pk=error_record_pk)
             error_record_data = {
-                'serial_number': error_record.serial_number,
+                'serial_number': error_record.pk,
                 'radar': error_record.radar,
                 'cp_nums': error_record.cp_nums,
                 'fail_message': error_record.fail_message,
                 'remark': error_record.remark,
                 'fail_picture_url': error_record.fail_picture.url if error_record.fail_picture else None
             }
-            # Get associated test records
             test_records = error_record.test_record.all()
-            test_records_data = list(test_records.values('serial_number', 'station_type', 'start_time', 'stop_time', 'result'))
+            test_records_data = list(test_records.values('pk', 'station_type', 'start_time', 'stop_time', 'result'))
+            print(f"test_records_data:{test_records_data}")
             board_status = error_record.board.status
             return JsonResponse({'error_record': error_record_data, 'test_records': test_records_data, 'board_status': board_status})
         except ErrorRecord.DoesNotExist:
@@ -818,7 +820,8 @@ def get_error_record(request, error_record_serial_number):
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 @csrf_exempt
-def update_error_record(request, error_record_serial_number):
+def update_error_record(request, error_record_pk):
+    
     if request.method == 'POST':
         radar = request.POST.get('radar')
         cp_nums = request.POST.get('cp_nums')
@@ -828,7 +831,7 @@ def update_error_record(request, error_record_serial_number):
         fail_picture = request.FILES.get('fail_picture')
 
         try:
-            error_record = ErrorRecord.objects.get(serial_number=error_record_serial_number)
+            error_record = ErrorRecord.objects.get(pk=error_record_pk)
 
             error_record.radar = radar
             error_record.cp_nums = cp_nums
@@ -841,12 +844,12 @@ def update_error_record(request, error_record_serial_number):
             error_record.save()
 
             board = error_record.board
-            board.status = board_status
-            board.save()
+            if board_status and board_status != "null":
+                board.status = board_status
+                board.save()
 
-            # Update test records results
             for test_record in error_record.test_record.all():
-                test_record.result = request.POST.get(f'test_record_result_{test_record.serial_number}')
+                test_record.result = request.POST.get(f'test_record_result_{test_record.pk}')
                 test_record.save()
 
             return JsonResponse({'success': 'Error record updated successfully.'})
