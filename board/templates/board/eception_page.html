@@ -448,8 +448,9 @@
                     alert(response.error);
                 }
             },
-            error: function(error) {
-                alert('创建Error Record失败.');
+            error: function(xhr, status, error) {
+                console.log("error: ", xhr.responseText);
+                alert('创建Error Record失败.原因：'+xhr.responseText);
             }
         });
     }
@@ -577,6 +578,7 @@
                             '<td>' + (result.error_record.fail_message) + '</td>' +
                             '<td>' + result.test_record.site + '</td>' +
                             '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
+                            '<td><button class="btn btn-sm btn-primary" onclick="downloadFailPicture(' + record.pk + ')">Download Fail Picture</button></td>' +
                             '</tr>';
                         resultsTable.append(row);
                         console.log("result.error_record.id: "+result.error_record.id);
@@ -588,6 +590,10 @@
             });
         });
     });
+
+    function downloadFailPicture(recordId) {
+        window.location.href = '/board/download_fail_picture/' + recordId + '/';
+    }
 </script>
 </body>
 </html>

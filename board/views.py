@@ -9,9 +9,9 @@ from .form import EnvReportForm,EditTestPlanForm,DisplayEditTestPlanForm
 from openpyxl import load_workbook
 
 from django.template import loader
-from django.shortcuts import render,redirect
+from django.shortcuts import get_object_or_404, render,redirect
 from django.db.models import Q
-from django.http import HttpResponseRedirect,JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect,JsonResponse
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.core.exceptions import ObjectDoesNotExist
@@ -620,7 +620,7 @@ def search_eception(request):
         station_type = request.POST.get('station')
         
         # Initialize query filters
-        test_record_filters = ~Q(result='pass')
+        test_record_filters = Q()
         board_filters = ~Q(status='testing') & ~Q(status='archived')
         
         # Add filters based on user input
@@ -635,6 +635,8 @@ def search_eception(request):
         
         # Retrieve Boards based on filters
         boards = Board.objects.filter(board_filters)
+        for board in boards:
+            print(f"board:{board.serial_number}")
         
         # Retrieve TestRecords based on filters and filter by the retrieved boards
         test_records = TestRecord.objects.filter(test_record_filters, board__in=boards)
@@ -665,6 +667,7 @@ def search_eception(request):
                             'status': board.status,
                         },
                         'test_record': {
+                            'id': test_record.id,
                             'station_type': test_record.station_type,
                             'start_time': test_record.start_time,
                             'cp_nums': test_record.cp_nums,
@@ -732,6 +735,7 @@ def create_error_record(request):
         remark = request.POST.get('remark')
         test_record_id = request.POST.get('test_record')
         board_status = request.POST.get('board_status')
+        print(board_status)
         fail_picture = request.FILES.get('fail_picture')
 
         try:
@@ -819,3 +823,17 @@ def update_error_record(request, error_record_pk):
         except ErrorRecord.DoesNotExist:
             return JsonResponse({'error': 'Error record not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+@csrf_exempt    
+def download_fail_picture(request, record_id):
+    try:
+        error_record = get_object_or_404(ErrorRecord, pk=record_id)
+        fail_picture_path = error_record.fail_picture.path
+        if os.path.exists(fail_picture_path):
+            with open(fail_picture_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type='application/octet-stream')
+                response['Content-Disposition'] = f'attachment; filename={os.path.basename(fail_picture_path)}'
+                return response
+        return JsonResponse({'error': 'File not found.'}, status=404)
+    except ErrorRecord.DoesNotExist:
+        return JsonResponse({'error': 'Error record not found.'}, status=404)
