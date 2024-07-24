@@ -25,6 +25,8 @@ class Board(models.Model):
         "archived":"archived",
     }
     status=models.CharField(max_length=10,choices=STATUS_CHOICES,default='testing')
+    if_overdue=models.BooleanField(default=False)
+    
     def __str__(self):
         return f"{self.project_name}-{self.project_config}-{self.subproject_name},no={self.board_number},cp={self.cp_nums})"    
 
@@ -72,7 +74,7 @@ class ErrorRecord(models.Model):
     remark = models.CharField(max_length=255,default='')
     
     # File field for failure picture
-    fail_picture = models.ImageField(upload_to='failures/%Y/%m/%d/', blank=True, null=True)
+    fail_picture = models.ImageField(upload_to='failures/%Y/%m/%d/%H%M%S/', blank=True, null=True)
 
     def __str__(self):
         return f"ErrorRecord for {self.board.serial_number} with {self.test_record.count()} test records"

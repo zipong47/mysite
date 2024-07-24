@@ -32,7 +32,22 @@ def find_first_error_station(test_plan, test_record):
         return None, None
     
     return None, None
- 
+
+def find_the_overtime_testrecord(test_record):
+    """
+    Find the overtime test record in the test record list.
+
+    Args:
+    test_record (list): The actual sequence of test stations the board went through, sorted by time.
+
+    Returns:
+    TestRecord: The overtime test record.
+    """
+    for record in test_record:
+        if record.stop_time - record.start_time > 1:
+            return record
+    return None
+
 class Command(BaseCommand):
     help = "Closes the specified poll for voting"
 
@@ -119,3 +134,12 @@ class Command(BaseCommand):
                         else:
                             current_record.save()
                             print("pass")
+                            
+        # Check Board if overdue
+        checkin_board_set = Board.objects.filter(env_finished_flag=True)
+        for board_unit in checkin_board_set:
+            checkin_record = TestRecord.objects.filter(board=board_unit,cp_nums=board_unit.cp_nums,station_type="checkin").get()
+            time_difference = datetime.now() - checkin_record.start_time
+            if time_difference.total_seconds() > 72 * 3600:
+                board_unit.if_overdue = True
+                board_unit.save()

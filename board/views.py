@@ -185,6 +185,8 @@ def checkin_ajax(request,sn_str):
         else:
             temp_record=TestRecord(board=board,station_type="checkin",cp_nums=board.cp_nums,start_time=datetime.now(),stop_time=datetime.now(),result='pass')
             temp_record.save()
+            board.env_finished_flag=True
+            board.save()
 
         test_records = TestRecord.objects.filter(board=board,cp_nums=current_cp,result='pass').order_by('start_time')
         is_followed, extra_tests, missing_tests, sequence_errors, current_tests = check_test_plan_status(test_records, test_plan_list)
@@ -275,7 +277,6 @@ def checkout_ajax(request,sn_str):
 
         test_records = TestRecord.objects.filter(board=board,cp_nums=current_cp,result='pass').order_by('start_time')
         is_followed, extra_tests, missing_tests, sequence_errors, current_tests= check_test_plan_status(test_records, test_plan_list)
-        if_test_pass=False
         
         test_plan_order_list=[]
         if sequence_errors:
@@ -303,6 +304,8 @@ def checkout_ajax(request,sn_str):
                 temp_record=TestRecord(board=board,station_type="checkout",cp_nums=board.cp_nums,start_time=datetime.now(),stop_time=datetime.now(),result='pass')
                 temp_record.save()
                 board.cp_nums=board.cp_nums+100
+                board.env_finished_flag=False
+                board.if_overdue=False
                 board.save()
             else:
                 message=message+"该板子已经checkout了! \n"
@@ -667,7 +670,6 @@ def search_eception(request):
                             'status': board.status,
                         },
                         'test_record': {
-                            'id': test_record.id,
                             'station_type': test_record.station_type,
                             'start_time': test_record.start_time,
                             'cp_nums': test_record.cp_nums,
@@ -806,6 +808,11 @@ def update_error_record(request, error_record_pk):
             error_record.remark = remark
 
             if fail_picture:
+                # 删除旧的 fail_picture 文件
+                if error_record.fail_picture:
+                    if os.path.isfile(error_record.fail_picture.path):
+                        os.remove(error_record.fail_picture.path)
+                # 更新为新的 fail_picture 文件
                 error_record.fail_picture = fail_picture
 
             error_record.save()
@@ -826,6 +833,7 @@ def update_error_record(request, error_record_pk):
 
 @csrf_exempt    
 def download_fail_picture(request, record_id):
+    print("download_fail_picture ing~~~~~~")
     try:
         error_record = get_object_or_404(ErrorRecord, pk=record_id)
         fail_picture_path = error_record.fail_picture.path
@@ -837,3 +845,26 @@ def download_fail_picture(request, record_id):
         return JsonResponse({'error': 'File not found.'}, status=404)
     except ErrorRecord.DoesNotExist:
         return JsonResponse({'error': 'Error record not found.'}, status=404)
+    
+@csrf_exempt
+def get_overtime_boards(request):
+    if request.method == 'GET':
+        results = []
+        boards = Board.objects.filter(env_finished_flag=True, if_overdue=True)
+        for board in boards:
+            test_record = TestRecord.objects.filter(board=board, cp_nums=board.cp_nums, station_type='checkin').get()
+            time_difference = datetime.now() - test_record.start_time
+            time_difference_days = time_difference.total_seconds() / (3600 * 24)
+            results.append({
+                "board": {
+                    'project_name': board.project_name,
+                    'serial_number': board.serial_number,
+                    'board_number': board.board_number,
+                    'env_finished_flag': board.env_finished_flag,
+                    'if_overdue': board.if_overdue
+                },
+                "checkin_time": test_record.start_time.strftime('%Y-%m-%d %H:%M'),
+                "time_difference_days": round(time_difference_days, 2)
+            })
+        return JsonResponse({'results': results})
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)

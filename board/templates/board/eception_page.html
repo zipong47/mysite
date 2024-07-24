@@ -210,6 +210,7 @@
               <div class="form-group col-auto d-flex align-items-center">
                   <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
                   <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" data-bs-toggle="modal" data-bs-target="#addMoreModal">Add More</button>
+                  <button type="button" class="btn btn-warning mb-2 ml-2 align-middle" data-bs-toggle="modal" data-bs-target="#overtimeBoardModal">Overtime Board</button>
               </div>
           </form>
         </div>
@@ -239,6 +240,34 @@
         </tbody>
       </table>
     </main>
+  </div>
+</div>
+
+<!-- Overtime Board Modal -->
+<div class="modal fade" id="overtimeBoardModal" tabindex="-1" aria-labelledby="overtimeBoardModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="overtimeBoardModalLabel">Overtime Boards</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <table class="table">
+                  <thead>
+                      <tr>
+                          <th>Project Name</th>
+                          <th>Serial Number</th>
+                          <th>Board Number</th>
+                          <th>Check_In Time</th>
+                          <th>Overdue Time</th>
+                      </tr>
+                  </thead>
+                  <tbody id="overtimeBoards">
+                      <!-- Overtime boards will be dynamically added here -->
+                  </tbody>
+              </table>
+          </div>
+      </div>
   </div>
 </div>
 
@@ -578,7 +607,7 @@
                             '<td>' + (result.error_record.fail_message) + '</td>' +
                             '<td>' + result.test_record.site + '</td>' +
                             '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
-                            '<td><button class="btn btn-sm btn-primary" onclick="downloadFailPicture(' + record.pk + ')">Download Fail Picture</button></td>' +
+                            '<td><button class="btn btn-sm btn-primary" onclick="downloadFailPicture(' + result.error_record.id + ')">Download Fail Picture</button></td>' +
                             '</tr>';
                         resultsTable.append(row);
                         console.log("result.error_record.id: "+result.error_record.id);
@@ -586,6 +615,33 @@
                 },
                 error: function(error) {
                     alert('Error submitting data.');
+                }
+            });
+        });
+
+        $('#overtimeBoardModal').on('show.bs.modal', function (e) {
+           
+            $.ajax({
+                type: 'GET',
+                url: '/board/get_overtime_boards/',  // Adjust the URL to match your Django setup
+                success: function(response) {
+                    if (response.results) {
+                        var boardsTable = $('#overtimeBoards');
+                        boardsTable.empty();
+                        $.each(response.results, function(index, result) {
+                            var row = '<tr>' +
+                                '<td>' + result.board.project_name + '</td>' +
+                                '<td>' + result.board.serial_number + '</td>' +
+                                '<td>' + result.board.board_number + '</td>' +
+                                '<td>' + result.checkin_time + '</td>' +
+                                '<td>' + result.time_difference_days + ' days' + '</td>' +
+                                '</tr>';
+                            boardsTable.append(row);
+                        });
+                    }
+                },
+                error: function(error) {
+                    alert('Error fetching overtime boards.');
                 }
             });
         });
