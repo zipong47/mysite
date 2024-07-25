@@ -3,7 +3,7 @@ import http.client
 def get_request(ip, sn, station_type):
     conn = http.client.HTTPConnection(ip)   
     # 使用str.format拼接URL路径和查询参数
-    path = "/macmlb?p=prodect&c=QUERY_RECORD&sn={}&p=start_time&p=stop_time&p=result&p=station_id&ts={}".format(sn, station_type)
+    path = "/macmlb?p=prodect&c=QUERY_RECORD&sn={}&p=start_time&p=stop_time&p=result&p=station_id&ts={}&p=failure_message&p=list_of_failing_tests".format(sn, station_type)
 
     conn.request("GET", path)
     

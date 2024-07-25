@@ -21,7 +21,7 @@ class Board(models.Model):
         "pause":"pause",
         "damage":"damage",
         "cancel":"cancel",
-        "cut":"cut",
+        "CS":"CS",
         "archived":"archived",
     }
     status=models.CharField(max_length=10,choices=STATUS_CHOICES,default='testing')

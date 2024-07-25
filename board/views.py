@@ -127,8 +127,12 @@ def show_history(request,type):
         start_of_day = datetime.combine(today, datetime.min.time())
         end_of_day = datetime.combine(today, datetime.max.time())
         test_records_with_schedule=[]
-        test_records_today = TestRecord.objects.filter(station_type='checkin').filter(start_time__range=(start_of_day, end_of_day)).order_by('-start_time')
-    # if type=='checkin':
+        
+        if type=='checkin':
+            test_records_today = TestRecord.objects.filter(station_type='checkin').filter(start_time__range=(start_of_day, end_of_day)).order_by('-start_time')
+        elif type=='checkout':
+            test_records_today = TestRecord.objects.filter(station_type='checkout').filter(start_time__range=(start_of_day, end_of_day)).order_by('-start_time')
+            
         for record in test_records_today:
             try:
                 schedule = TestSchedule.objects.get(serial_number=record.board,cp_nums=record.cp_nums)
@@ -275,7 +279,7 @@ def checkout_ajax(request,sn_str):
         test_plan_list=test_schedule.test_sequence.split("→")
         test_plan_list=['checkin']+test_plan_list
 
-        test_records = TestRecord.objects.filter(board=board,cp_nums=current_cp,result='pass').order_by('start_time')
+        test_records = TestRecord.objects.filter(board=board,cp_nums=current_cp,result__in=['pass','cof']).order_by('start_time')
         is_followed, extra_tests, missing_tests, sequence_errors, current_tests= check_test_plan_status(test_records, test_plan_list)
         
         test_plan_order_list=[]
