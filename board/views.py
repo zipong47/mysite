@@ -872,3 +872,39 @@ def get_overtime_boards(request):
             })
         return JsonResponse({'results': results})
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+@csrf_exempt
+def filter_boards(request):
+    context={}
+    return render(request, "board/checkin.html",context)
+
+
+@csrf_exempt
+def filter_search_boards_ajax(request):
+    site = request.GET.get('site', '')
+    start_time = request.GET.get('start_time', '')
+    end_time = request.GET.get('end_time', '')
+    product_code = request.GET.get('product_code', '')
+    project_name = request.GET.get('project_name', '')
+    subproject_name = request.GET.get('subproject_name', '')
+    result = request.GET.get('result', '')
+
+    boards = Board.objects.all()
+
+    if site:
+        boards = boards.filter(site=site)
+    if start_time and end_time:
+        start_time = datetime.strptime(start_time, '%Y-%m-%d')
+        end_time = datetime.strptime(end_time, '%Y-%m-%d')
+        test_records = TestRecord.objects.filter(start_time__range=(start_time, end_time))
+        boards = boards.filter(testrecord__in=test_records)
+    if product_code:
+        boards = boards.filter(product_code=product_code)
+    if project_name:
+        boards = boards.filter(project_name=project_name)
+    if subproject_name:
+        boards = boards.filter(subproject_name=subproject_name)
+    if result:
+        boards = boards.filter(testrecord__result=result)
+
+    return render(request, 'filter_boards.html', {'boards': boards})

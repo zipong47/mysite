@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="generator" content="Hugo 0.108.0">
+    <title>Dashboard</title>
+
+    {% load static %}
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" crossorigin="anonymous">
+    <link href="{% static 'css/flatpickr.min.css' %}" rel="stylesheet" crossorigin="anonymous">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+      .b-example-divider {
+        height: 3rem;
+        background-color: rgba(0, 0, 0, .1);
+        border: solid rgba(0, 0, 0, .15);
+        border-width: 1px 0;
+        box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+      }
+
+      .b-example-vr {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 100vh;
+      }
+
+      .bi {
+        vertical-align: -.125em;
+        fill: currentColor;
+      }
+
+      .nav-scroller {
+        position: relative;
+        z-index: 2;
+        height: 2.75rem;
+        overflow-y: hidden;
+      }
+
+      .nav-scroller .nav {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-bottom: 1rem;
+        margin-top: -1px;
+        overflow-x: auto;
+        text-align: center;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .form-inline .form-control {
+          width: auto;
+          display: inline-block;
+      }
+
+      .form-inline .btn {
+          margin-left: 10px;
+      }
+
+      .input-group {
+          display: flex;
+          align-items: center;
+      }
+
+      .flatpickr-input {
+          background-color: #f8f9fa;
+          border: 1px solid #ced4da;
+          border-radius: 0.25rem;
+          padding: 0.375rem 0.75rem;
+          font-size: 1rem;
+      }
+
+      .flatpickr-input:focus {
+          border-color: #80bdff;
+          outline: 0;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+    </style>
+
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">REL</a>
+  <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search">
+  <div class="navbar-nav">
+    <div class="nav-item text-nowrap">
+      <a class="nav-link px-3" href="#">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid">
+  <div class="row">
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+      <div class="position-sticky pt-3 sidebar-sticky">
+        <ul class="nav flex-column" id="ul_header">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{% url 'index' %}">
+              <span data-feather="home" class="align-text-bottom"></span>
+              Summary
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'smt' %}">
+              <span data-feather="file" class="align-text-bottom"></span>
+              SMT
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">
+              <span data-feather="bar-chart-2" class="align-text-bottom"></span>
+              SMT2
+            </a>
+          </li>
+        </ul>
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+          <span>Upload Report</span>
+          <a class="link-secondary" href="{% url 'upload' %}" aria-label="Add a new report">
+            <span data-feather="plus-circle" class="align-text-bottom"></span>
+          </a>
+        </h6>
+        <ul class="nav flex-column mb-2" id="ul_header">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'check_in' %}">
+              <span data-feather="file-text" class="align-text-bottom"></span>
+              Checkin
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'check_out' %}">
+              <span data-feather="file-text" class="align-text-bottom"></span>
+              Checkout
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'enter_test_plan' %}">
+              <span data-feather="file-text" class="align-text-bottom"></span>
+              Enter Test Plan
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'get_env_report' %}">
+              <span data-feather="file-text" class="align-text-bottom"></span>
+              Input Report
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'eception_page' %}">
+              <span data-feather="file-text" class="align-text-bottom"></span>
+              Eceptional Page
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Filter Boards</h1>
+        </div>
+
+        <form id="filterForm" class="form-inline row">
+            <div class="form-group col-auto">
+                <label>Site:</label>
+                <input type="text" class="form-control" id="site" name="site" placeholder="Enter site">
+            </div>
+            <div class="form-group col-auto">
+                <label>Time:</label>
+                <input type="text" class="form-control flatpickr-input" id="dateTimeRange" name="dateTimeRange" placeholder="Select date range">
+            </div>
+            <div class="form-group col-auto">
+                <label>Product Code:</label>
+                <input type="text" class="form-control" id="product_code" name="product_code" placeholder="Enter product code">
+            </div>
+            <div class="form-group col-auto">
+                <label>Product Name:</label>
+                <input type="text" class="form-control" id="project_name" name="project_name" placeholder="Enter product name">
+            </div>
+            <div class="form-group col-auto">
+                <label>Build Stage:</label>
+                <input type="text" class="form-control" id="subproject_name" name="subproject_name" placeholder="Enter build stage">
+            </div>
+            <div class="form-group col-auto">
+                <label>Result:</label>
+                <select class="form-control form-select" id="result" name="result">
+                    <option value="">Select result</option>
+                    <option value="pass">Pass</option>
+                    <option value="fail">Fail</option>
+                    <option value="cof">COF</option>
+                </select>
+            </div>
+            <div class="form-group col-auto d-flex align-items-center">
+                <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
+            </div>
+        </form>
+
+        <div class="customize_message_html"></div>
+
+        <!-- Table -->
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                    <th scope="col">Test Catagory</th>
+                    <th scope="col">Test</th>
+                    <th scope="col">Chamber</th>
+                    <th scope="col">Product Code</th>
+                    <th scope="col">Build Stage</th>
+                    <th scope="col">Site</th>
+                    <th scope="col">Unit Number</th>
+                    <th scope="col">MLB Config</th>
+                    <th scope="col">APN</th>
+                    <th scope="col">Nand_SN0</th>
+                    <th scope="col">Nand_SN1</th>
+                    <th scope="col">Check-In Time</th>
+                    <th scope="col">Check-Out Time</th>
+                    <th scope="col">Board Status</th>
+                    <th scope="col">Radar</th>
+                    <th scope="col">Remark</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for board in boards %}
+                <tr>
+                    <td>{{ board.project_config }}</td>
+                    <td>{{ board.test_item_name }}</td>
+                    <td>/</td>
+                    <td>{{ board.product_code }}</td>
+                    <td>{{ board.subproject_name }}</td>
+                    <td>{{ board.site }}</td>
+                    <td>{{ board.board_number }}</td>
+                    <td>{{ board.configuration }}</td>
+                    <td>{{ board.APN }}</td>
+                    <td>{{ board.first_GS_sn }}</td>
+                    <td>{{ board.second_GS_sn }}</td>
+                    <td>{{ board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first.start_time }}</td>
+                    <td>{{ board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first.start_time }}</td>
+                    <td>{{ board.status }}</td>
+                    <td>{{ board.errorrecord_set.first.radar }}</td>
+                    <td>{{ board.errorrecord_set.first.remark }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+  </div>
+</div>
+
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/feather.min.js' %}"></script>
+<script src="{% static 'js/Chart.min.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/jquery-3.7.1.js' %}"></script>
+<script src="{% static 'js/flatpickr.js' %}"></script>
+
+<script>
+    $(document).ready(function () {
+    // 遍历所有导航项并检查是否匹配当前路径
+    $("#ul_header li a").each(function () {
+      var a = $(this);
+      if (a.attr("href") === location.pathname) {
+        a.addClass("active");
+      } else {
+        a.removeClass("active");
+      }
+    });
+  })
+
+  function searchSerialNumber() {
+        var serialNumber = $('#serialNumber').val();
+        $.ajax({
+            type: 'POST',
+            url: '/board/search_serial_number_in_eception_page/',  // Adjust the URL to match your Django setup
+            data: { serialNumber: serialNumber },
+            success: function(response) {
+                if (response.error) {
+                    $('#searchResult').html('<div class="alert alert-danger">' + response.error + '</div>');
+                } else {
+                    var board = response.board;
+                    var testRecords = response.test_records;
+
+                    var boardInfo = '<h5>Board Information</h5>' +
+                                    '<p>Project Name: ' + board.project_name + '</p>' +
+                                    '<p>Serial Number: ' + board.serial_number + '</p>' +
+                                    '<p>CP Numbers: ' + board.cp_nums + '</p>' +
+                                    '<p>Status: ' + board.status + '</p>';
+                    var testRecordInfo = '<h5>Test Records</h5><ul>';
+                    var testRecordOptions = '';
+
+                    $.each(testRecords, function(index, record) {
+                        testRecordInfo += '<li>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</li>';
+                        testRecordOptions += '<option value="' + record.pk + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
+                    });
+                    testRecordInfo += '</ul>';
+                    console.log("boardInfo: "+boardInfo);
+                    console.log("testRecordInfo: "+testRecordInfo);
+                    console.log("testRecordOptions: "+testRecordOptions);
+
+                    $('#searchResult').html(boardInfo + testRecordInfo);
+                    $('#cp_nums').val(board.cp_nums);
+                    $('#test_record').html(testRecordOptions);
+                }
+            },
+            error: function(error) {
+                $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        flatpickr("#dateTimeRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+        });
+
+        $('#timeForm').on('submit', function(e) {
+            e.preventDefault();
+            var dateTimeRange = $('#dateTimeRange').val();
+            var project = $('#projectDropdown').val();
+            var station = $('#stationDropdown').val();
+
+            var data = {
+                startTime: dateTimeRange.split(" to ")[0],
+                endTime: dateTimeRange.split(" to ")[1],
+                project: project,
+                station: station
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "search_eception" %}',  // Adjust the URL to match your Django setup
+                data: data,
+                success: function(response) {
+                    var resultsTable = $('#searchResults');
+                    resultsTable.empty();
+
+                    if (response && response.customize_message) {
+                        $('.customize_message_html').html(response.customize_message);
+                    }
+
+                    $.each(response.results, function(index, result) {
+                        var row = '<tr>' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td>' + result.board.serial_number + '</td>' +
+                            '<td>' + result.test_record.start_time + '</td>' +
+                            '<td>' + result.board.project_name + '</td>' +
+                            '<td>' + result.test_record.station_type + '</td>' +
+                            '<td>' + result.board.status + '</td>' +
+                            '<td>' + (result.error_record.fail_message) + '</td>' +
+                            '<td>' + result.test_record.site + '</td>' +
+                            '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
+                            '<td><button class="btn btn-sm btn-primary" onclick="downloadFailPicture(' + result.error_record.id + ')">Download Fail Picture</button></td>' +
+                            '</tr>';
+                        resultsTable.append(row);
+                        console.log("result.error_record.id: "+result.error_record.id);
+                    });
+                },
+                error: function(error) {
+                    alert('Error submitting data.');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

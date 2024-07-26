@@ -33,21 +33,6 @@ def find_first_error_station(test_plan, test_record):
     
     return None, None
 
-def find_the_overtime_testrecord(test_record):
-    """
-    Find the overtime test record in the test record list.
-
-    Args:
-    test_record (list): The actual sequence of test stations the board went through, sorted by time.
-
-    Returns:
-    TestRecord: The overtime test record.
-    """
-    for record in test_record:
-        if record.stop_time - record.start_time > 1:
-            return record
-    return None
-
 class Command(BaseCommand):
     help = "Closes the specified poll for voting"
 

@@ -24,4 +24,5 @@ urlpatterns = [
     path('update_error_record/<int:error_record_pk>/', views.update_error_record, name='update_error_record'),
     path('search_serial_number_in_eception_page/', views.search_serial_number_in_eception_page, name='search_serial_number_in_eception_page'),
     path('download_fail_picture/<int:record_id>/', views.download_fail_picture, name='download_fail_picture'),
+    path('filter_search_boards/', views.filter_search_boards, name='filter_search_boards'),
 ]

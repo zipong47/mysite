@@ -15,6 +15,7 @@ class Board(models.Model):
     HHPN=models.CharField(max_length=50,default='')
     first_GS_sn=models.CharField(max_length=50,default='')
     second_GS_sn=models.CharField(max_length=50,default='')
+    site=models.CharField(max_length=20,default='FXLH')
     env_finished_flag = models.BooleanField(default=False)
     STATUS_CHOICES={
         "testing":"testing",
@@ -42,7 +43,6 @@ class TestRecord(models.Model):
     cp_nums = models.IntegerField(default=0)
     stop_time=models.DateTimeField("stop time")
     result= models.CharField(max_length=4,choices=STATUS_CHOICES,default='fail')
-    site=models.CharField(max_length=20,default='FXLH')
     operator=models.CharField(max_length=50,default='')
     remark=models.CharField(max_length=500,default='')
     def __str__(self): 
