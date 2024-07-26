@@ -172,19 +172,30 @@
               Eceptional Page
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'filter_boards' %}">
+              <span data-feather="file-text" class="align-text-bottom"></span>
+              批量查询
+            </a>
+          </li>
         </ul>
       </div>
     </nav>
 
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Filter Boards</h1>
+            <h1 class="h2">批量查询</h1>
         </div>
 
         <form id="filterForm" class="form-inline row">
             <div class="form-group col-auto">
                 <label>Site:</label>
-                <input type="text" class="form-control" id="site" name="site" placeholder="Enter site">
+                <select class="form-control form-select" id="site" name="site">
+                    <option value="">Select site</option>
+                    {% for site in site_set %}
+                    <option value="{{ site }}">{{ site }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="form-group col-auto">
                 <label>Time:</label>
@@ -192,23 +203,38 @@
             </div>
             <div class="form-group col-auto">
                 <label>Product Code:</label>
-                <input type="text" class="form-control" id="product_code" name="product_code" placeholder="Enter product code">
+                <select class="form-control form-select" id="product_code" name="product_code">
+                    <option value="">Select product code</option>
+                    {% for product in product_code_set %}
+                    <option value="{{ product }}">{{ product }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="form-group col-auto">
                 <label>Product Name:</label>
-                <input type="text" class="form-control" id="project_name" name="project_name" placeholder="Enter product name">
+                <select class="form-control form-select" id="project_name" name="project_name">
+                    <option value="">Select project name</option>
+                    {% for project in project_name_set %}
+                    <option value="{{ project }}">{{ project }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="form-group col-auto">
                 <label>Build Stage:</label>
-                <input type="text" class="form-control" id="subproject_name" name="subproject_name" placeholder="Enter build stage">
+                <select class="form-control form-select" id="subproject_name" name="subproject_name">
+                    <option value="">Select build stage</option>
+                    {% for subproject in build_name_set %}
+                    <option value="{{ subproject }}">{{ subproject }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="form-group col-auto">
                 <label>Result:</label>
                 <select class="form-control form-select" id="result" name="result">
                     <option value="">Select result</option>
-                    <option value="pass">Pass</option>
-                    <option value="fail">Fail</option>
-                    <option value="cof">COF</option>
+                    {% for result in result_set %}
+                    <option value="{{ result }}">{{ result }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group col-auto d-flex align-items-center">
@@ -240,27 +266,8 @@
                     <th scope="col">Remark</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for board in boards %}
-                <tr>
-                    <td>{{ board.project_config }}</td>
-                    <td>{{ board.test_item_name }}</td>
-                    <td>/</td>
-                    <td>{{ board.product_code }}</td>
-                    <td>{{ board.subproject_name }}</td>
-                    <td>{{ board.site }}</td>
-                    <td>{{ board.board_number }}</td>
-                    <td>{{ board.configuration }}</td>
-                    <td>{{ board.APN }}</td>
-                    <td>{{ board.first_GS_sn }}</td>
-                    <td>{{ board.second_GS_sn }}</td>
-                    <td>{{ board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first.start_time }}</td>
-                    <td>{{ board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first.start_time }}</td>
-                    <td>{{ board.status }}</td>
-                    <td>{{ board.errorrecord_set.first.radar }}</td>
-                    <td>{{ board.errorrecord_set.first.remark }}</td>
-                </tr>
-                {% endfor %}
+            <tbody id="searchResults">
+              <!-- Search results will be dynamically added here -->
             </tbody>
         </table>
     </main>
@@ -287,54 +294,13 @@
     });
   })
 
-  function searchSerialNumber() {
-        var serialNumber = $('#serialNumber').val();
-        $.ajax({
-            type: 'POST',
-            url: '/board/search_serial_number_in_eception_page/',  // Adjust the URL to match your Django setup
-            data: { serialNumber: serialNumber },
-            success: function(response) {
-                if (response.error) {
-                    $('#searchResult').html('<div class="alert alert-danger">' + response.error + '</div>');
-                } else {
-                    var board = response.board;
-                    var testRecords = response.test_records;
-
-                    var boardInfo = '<h5>Board Information</h5>' +
-                                    '<p>Project Name: ' + board.project_name + '</p>' +
-                                    '<p>Serial Number: ' + board.serial_number + '</p>' +
-                                    '<p>CP Numbers: ' + board.cp_nums + '</p>' +
-                                    '<p>Status: ' + board.status + '</p>';
-                    var testRecordInfo = '<h5>Test Records</h5><ul>';
-                    var testRecordOptions = '';
-
-                    $.each(testRecords, function(index, record) {
-                        testRecordInfo += '<li>' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</li>';
-                        testRecordOptions += '<option value="' + record.pk + '">' + record.station_type + ' (Start: ' + record.start_time + ', Stop: ' + record.stop_time + ')</option>';
-                    });
-                    testRecordInfo += '</ul>';
-                    console.log("boardInfo: "+boardInfo);
-                    console.log("testRecordInfo: "+testRecordInfo);
-                    console.log("testRecordOptions: "+testRecordOptions);
-
-                    $('#searchResult').html(boardInfo + testRecordInfo);
-                    $('#cp_nums').val(board.cp_nums);
-                    $('#test_record').html(testRecordOptions);
-                }
-            },
-            error: function(error) {
-                $('#searchResult').html('<div class="alert alert-danger">Error searching serial number.</div>');
-            }
-        });
-    }
-
     $(document).ready(function() {
         flatpickr("#dateTimeRange", {
             mode: "range",
             dateFormat: "Y-m-d",
         });
 
-        $('#timeForm').on('submit', function(e) {
+        $('#filterForm').on('submit', function(e) {
             e.preventDefault();
             var dateTimeRange = $('#dateTimeRange').val();
             var project = $('#projectDropdown').val();
@@ -349,7 +315,7 @@
 
             $.ajax({
                 type: 'POST',
-                url: '{% url "search_eception" %}',  // Adjust the URL to match your Django setup
+                url: '{% url "filter_search_boards_ajax" %}',  // Adjust the URL to match your Django setup
                 data: data,
                 success: function(response) {
                     var resultsTable = $('#searchResults');

@@ -876,8 +876,19 @@ def get_overtime_boards(request):
 @csrf_exempt
 def filter_boards(request):
     context={}
-    return render(request, "board/checkin.html",context)
-
+    project_name_set=Board.objects.values_list('project_name',flat=True).distinct()
+    build_name_set=Board.objects.values_list('subproject_name',flat=True).distinct()
+    result_set=TestRecord.objects.values_list('result',flat=True).distinct()
+    product_code_set=Board.objects.values_list('product_code',flat=True).distinct()
+    site_set=Board.objects.values_list('site',flat=True).distinct()
+    
+    context["site_set"]=site_set
+    context["product_code_set"]=product_code_set
+    context["project_name_set"]=project_name_set
+    context["build_name_set"]=build_name_set
+    context["result_set"]=result_set
+    
+    return render(request, "board/batch_search.html",context)
 
 @csrf_exempt
 def filter_search_boards_ajax(request):
@@ -906,5 +917,5 @@ def filter_search_boards_ajax(request):
         boards = boards.filter(subproject_name=subproject_name)
     if result:
         boards = boards.filter(testrecord__result=result)
-
+        
     return render(request, 'filter_boards.html', {'boards': boards})
