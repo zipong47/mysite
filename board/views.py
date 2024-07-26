@@ -951,19 +951,25 @@ def track_board(request):
     return render(request, 'board/single_board_track.html', context)
 
 @csrf_exempt
-def track_board_ajax(request):
-    serial_number = request.GET.get('serial_number', '')
-
+def track_board_ajax(request,serial_number):
+    print("nihao")
     try:
         board = Board.objects.get(serial_number=serial_number)
         test_records = TestRecord.objects.filter(board=board)
 
         board_data = {
-            'project_name': board.project_name,
             'serial_number': board.serial_number,
+            'subproject_name': board.subproject_name,
+            'test_item_name': board.test_item_name,
             'product_code': board.product_code,
             'site': board.site,
+            'board_number': board.board_number,
+            'configuration': board.configuration,
+            'APN': board.APN,
+            'first_GS_sn': board.first_GS_sn,
+            'second_GS_sn': board.second_GS_sn,
             'status': board.status,
+            'remark': "remark",
         }
 
         test_records_data = []
@@ -972,8 +978,8 @@ def track_board_ajax(request):
                 'station_type': record.station_type,
                 'start_time': record.start_time,
                 'stop_time': record.stop_time,
+                'cp_nums': record.cp_nums,
                 'result': record.result,
-                'site': "site",
                 'operator': record.operator,
                 'remark': record.remark,
             })

@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <meta name="generator" content="Hugo 0.108.0">
-    <title>Dashboard</title>
+    <title>Single Board Track</title>
 
     {% load static %}
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" crossorigin="anonymous">
@@ -193,16 +193,38 @@
                 <h1 class="h2">单板查询</h1>
             </div>
 
-            <form id="trackForm" class="form-inline">
-                <div class="form-group">
-                    <label for="serialNumber">Serial Number:</label>
-                    <input type="text" class="form-control" id="serialNumber" name="serialNumber" placeholder="Enter serial number">
+            <div class="input-group">
+                <input type="text" class="form-control" id="serialNumberInput" placeholder="请输入sn" onkeydown="handleKeyDown(event)">
+                <div class="input-group-append" style="margin-left: 8px;">
+                    <button class="btn btn-primary" type="button" onclick="submitData()">提交</button>
+                    <button class="btn btn-outline-secondary" type="button" onclick="clearInput()" title="Clear input"><i class="fa fa-times"></i></button>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+            </div>
 
             <div class="board-info mt-4">
-                <!-- Board info will be displayed here -->
+                <h3>Board Information</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Subproject Name</th>
+                            <th>Test Item Name</th>
+                            <th>Chamber</th>
+                            <th>Product Code</th>
+                            <th>Site</th>
+                            <th>Board Number</th>
+                            <th>Configuration</th>
+                            <th>APN</th>
+                            <th>Nand_SN0</th>
+                            <th>Nand_SN1</th>
+                            <th>Board Status</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boardInfo">
+                        <!-- Board info will be dynamically added here -->
+                    </tbody>
+                </table>
             </div>
 
             <div class="test-records mt-4">
@@ -213,8 +235,8 @@
                             <th>Station Type</th>
                             <th>Start Time</th>
                             <th>Stop Time</th>
+                            <th>CP Nums</th>
                             <th>Result</th>
-                            <th>Site</th>
                             <th>Operator</th>
                             <th>Remark</th>
                         </tr>
@@ -246,57 +268,70 @@
                 a.removeClass("active");
             }
         });
-
-        flatpickr("#dateTimeRange", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-        });
-
-        $('#trackForm').on('submit', function(e) {
-            e.preventDefault();
-            var serialNumber = $('#serialNumber').val();
-
-            $.ajax({
-                type: 'GET',
-                url: '{% url "track_board_ajax" %}',
-                data: { serial_number: serialNumber },
-                success: function(response) {
-                    if (response.error) {
-                        alert(response.error);
-                    } else {
-                        var board = response.board;
-                        var testRecords = response.test_records;
-
-                        var boardInfoHtml = '<h3>Board Information</h3>' +
-                            '<p>Project Name: ' + board.project_name + '</p>' +
-                            '<p>Serial Number: ' + board.serial_number + '</p>' +
-                            '<p>Product Code: ' + board.product_code + '</p>' +
-                            '<p>Site: ' + board.site + '</p>' +
-                            '<p>Status: ' + board.status + '</p>';
-
-                        $('.board-info').html(boardInfoHtml);
-
-                        var testRecordsHtml = '';
-                        $.each(testRecords, function(index, record) {
-                            testRecordsHtml += '<tr>' +
-                                '<td>' + record.station_type + '</td>' +
-                                '<td>' + record.start_time + '</td>' +
-                                '<td>' + record.stop_time + '</td>' +
-                                '<td>' + record.result + '</td>' +
-                                '<td>' + record.site + '</td>' +
-                                '<td>' + record.operator + '</td>' +
-                                '<td>' + record.remark + '</td>' +
-                                '</tr>';
-                        });
-                        $('#testRecords').html(testRecordsHtml);
-                    }
-                },
-                error: function(error) {
-                    alert('Error fetching board information.');
-                }
-            });
-        });
     });
+
+    function submitData() {
+        const serialNumber = document.getElementById("serialNumberInput").value;
+        fetch(`/board/track_board_ajax/${serialNumber}/`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                const boardInfo = data.board;
+                const testRecords = data.test_records;
+
+                let boardInfoHtml = '<tr>' +
+                    `<td>${boardInfo.serial_number}</td>` +
+                    `<td>${boardInfo.subproject_name}</td>` +
+                    `<td>${boardInfo.test_item_name}</td>` +
+                    '<td>/</td>' +
+                    `<td>${boardInfo.product_code}</td>` +
+                    `<td>${boardInfo.site}</td>` +
+                    `<td>${boardInfo.board_number}</td>` +
+                    `<td>${boardInfo.configuration}</td>` +
+                    `<td>${boardInfo.APN}</td>` +
+                    `<td>${boardInfo.first_GS_sn}</td>` +
+                    `<td>${boardInfo.second_GS_sn}</td>` +
+                    `<td>${boardInfo.status}</td>` +
+                    `<td>${boardInfo.remark}</td>` +
+                    '</tr>';
+                document.getElementById('boardInfo').innerHTML = boardInfoHtml;
+
+                let testRecordsHtml = '';
+                testRecords.forEach(record => {
+                    testRecordsHtml += '<tr>' +
+                        `<td>${record.station_type}</td>` +
+                        `<td>${record.start_time}</td>` +
+                        `<td>${record.stop_time}</td>` +
+                        `<td>${record.cp_nums}</td>` +
+                        `<td>${record.result}</td>` +
+                        `<td>${record.operator}</td>` +
+                        `<td>${record.remark}</td>` +
+                        '</tr>';
+                });
+                document.getElementById('testRecords').innerHTML = testRecordsHtml;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching board information:', error);
+        });
+    }
+
+    function handleKeyDown(event) {
+        if (event.key === "Enter") {
+            submitData();
+        }
+    }
+
+    function clearInput() {
+        document.getElementById('serialNumberInput').value = '';
+        document.getElementById('serialNumberInput').focus();
+    }
 </script>
 </body>
 </html>

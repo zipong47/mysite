@@ -283,8 +283,6 @@
           const productCode = document.getElementById("productInput").value;
           // 在此处添加将 productCode 发送到后端的逻辑（例如，使用 AJAX）
           const url = `/board/checkout_ajax/${productCode}/`;
-          console.log("提交产品编号:", productCode);
-          console.log(url);
           fetch(url, {
               headers: {
                   'X-Requested-With': 'XMLHttpRequest',
@@ -311,8 +309,6 @@
               const order_list = data.test_plan_order_list;
               const test_plan_list = data.test_plan_list;
 
-              console.log("order:"+order_list)
-              console.log("test_plan:"+test_plan_list)
               // 添加箭头图标删除逻辑
               const icons = document.querySelectorAll('.fa-arrow-down.icon');
               if (icons.length > 0) {

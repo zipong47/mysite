@@ -27,5 +27,5 @@ urlpatterns = [
     path('filter_search_boards_ajax/', views.filter_search_boards_ajax, name='filter_search_boards_ajax'),
     path('filter_boards/', views.filter_boards, name='filter_boards'),
     path('track_board/', views.track_board, name='track_board'),
-    path('track_board_ajax/', views.track_board_ajax, name='track_board_ajax'),
+    path('track_board_ajax/<str:serial_number>/', views.track_board_ajax, name='track_board_ajax'),
 ]
