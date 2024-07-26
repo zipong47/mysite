@@ -893,8 +893,7 @@ def filter_boards(request):
 @csrf_exempt
 def filter_search_boards_ajax(request):
     site = request.GET.get('site', '')
-    start_time = request.GET.get('start_time', '')
-    end_time = request.GET.get('end_time', '')
+    dateTimeRange = request.GET.get('dateTimeRange', '')
     product_code = request.GET.get('product_code', '')
     project_name = request.GET.get('project_name', '')
     subproject_name = request.GET.get('subproject_name', '')
@@ -904,11 +903,13 @@ def filter_search_boards_ajax(request):
 
     if site:
         boards = boards.filter(site=site)
-    if start_time and end_time:
+    if dateTimeRange:
+        start_time, end_time = dateTimeRange.split(' to ')
         start_time = datetime.strptime(start_time, '%Y-%m-%d')
         end_time = datetime.strptime(end_time, '%Y-%m-%d')
         test_records = TestRecord.objects.filter(start_time__range=(start_time, end_time))
-        boards = boards.filter(testrecord__in=test_records)
+        boards = boards.filter(testrecord__in=test_records).distinct()
+
     if product_code:
         boards = boards.filter(product_code=product_code)
     if project_name:
@@ -917,5 +918,70 @@ def filter_search_boards_ajax(request):
         boards = boards.filter(subproject_name=subproject_name)
     if result:
         boards = boards.filter(testrecord__result=result)
-        
-    return render(request, 'filter_boards.html', {'boards': boards})
+
+    response = []
+    for board in boards:
+        checkin_record = board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first()
+        checkout_record = board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first()
+        error_record = board.errorrecord_set.first()
+
+        response.append({
+            'project_config': board.project_config,
+            'test_item_name': board.test_item_name,
+            'product_code': board.product_code,
+            'subproject_name': board.subproject_name,
+            'site': board.site,
+            'board_number': board.board_number,
+            'configuration': board.configuration,
+            'APN': board.APN,
+            'first_GS_sn': board.first_GS_sn,
+            'second_GS_sn': board.second_GS_sn,
+            'checkin_time': checkin_record.start_time if checkin_record else '',
+            'checkout_time': checkout_record.start_time if checkout_record else '',
+            'status': board.status,
+            'radar': error_record.radar if error_record else '',
+            'remark': error_record.remark if error_record else '',
+        })
+
+    return JsonResponse({'results': response})
+
+@csrf_exempt
+def track_board(request):
+    context={}
+    return render(request, 'board/single_board_track.html', context)
+
+@csrf_exempt
+def track_board_ajax(request):
+    serial_number = request.GET.get('serial_number', '')
+
+    try:
+        board = Board.objects.get(serial_number=serial_number)
+        test_records = TestRecord.objects.filter(board=board)
+
+        board_data = {
+            'project_name': board.project_name,
+            'serial_number': board.serial_number,
+            'product_code': board.product_code,
+            'site': board.site,
+            'status': board.status,
+        }
+
+        test_records_data = []
+        for record in test_records:
+            test_records_data.append({
+                'station_type': record.station_type,
+                'start_time': record.start_time,
+                'stop_time': record.stop_time,
+                'result': record.result,
+                'site': "site",
+                'operator': record.operator,
+                'remark': record.remark,
+            })
+
+        return JsonResponse({
+            'board': board_data,
+            'test_records': test_records_data
+        })
+
+    except Board.DoesNotExist:
+        return JsonResponse({'error': 'Board not found'})

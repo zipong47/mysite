@@ -179,10 +179,10 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" href="{% url 'track_board' %}">
-                        <span data-feather="file-text" class="align-text-bottom"></span>
-                        单板查询
-                      </a>
+                        <a class="nav-link" href="{% url 'track_board' %}">
+                          <span data-feather="file-text" class="align-text-bottom"></span>
+                          单板查询
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -190,92 +190,40 @@
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">批量查询</h1>
+                <h1 class="h2">单板查询</h1>
             </div>
 
-            <form id="filterForm" class="form-inline row">
-                <div class="form-group col-auto">
-                    <label>Site:</label>
-                    <select class="form-control form-select" id="site" name="site">
-                        <option value="">Select site</option>
-                        {% for site in site_set %}
-                        <option value="{{ site }}">{{ site }}</option>
-                        {% endfor %}
-                    </select>
+            <form id="trackForm" class="form-inline">
+                <div class="form-group">
+                    <label for="serialNumber">Serial Number:</label>
+                    <input type="text" class="form-control" id="serialNumber" name="serialNumber" placeholder="Enter serial number">
                 </div>
-                <div class="form-group col-auto">
-                    <label>Time:</label>
-                    <input type="text" class="form-control flatpickr-input" id="dateTimeRange" name="dateTimeRange" placeholder="Select date range">
-                </div>
-                <div class="form-group col-auto">
-                    <label>Product Code:</label>
-                    <select class="form-control form-select" id="product_code" name="product_code">
-                        <option value="">Select product code</option>
-                        {% for product in product_code_set %}
-                        <option value="{{ product }}">{{ product }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>Product Name:</label>
-                    <select class="form-control form-select" id="project_name" name="project_name">
-                        <option value="">Select project name</option>
-                        {% for project in project_name_set %}
-                        <option value="{{ project }}">{{ project }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>Build Stage:</label>
-                    <select class="form-control form-select" id="subproject_name" name="subproject_name">
-                        <option value="">Select build stage</option>
-                        {% for subproject in build_name_set %}
-                        <option value="{{ subproject }}">{{ subproject }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>Result:</label>
-                    <select class="form-control form-select" id="result" name="result">
-                        <option value="">Select result</option>
-                        {% for result in result_set %}
-                        <option value="{{ result }}">{{ result }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto d-flex align-items-center">
-                    <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
-                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
             </form>
 
-            <div class="customize_message_html"></div>
+            <div class="board-info mt-4">
+                <!-- Board info will be displayed here -->
+            </div>
 
-            <!-- Table -->
-            <table class="table mt-4">
-                <thead>
-                    <tr>
-                        <th scope="col">Test Catagory</th>
-                        <th scope="col">Test</th>
-                        <th scope="col">Chamber</th>
-                        <th scope="col">Product Code</th>
-                        <th scope="col">Build Stage</th>
-                        <th scope="col">Site</th>
-                        <th scope="col">Unit Number</th>
-                        <th scope="col">MLB Config</th>
-                        <th scope="col">APN</th>
-                        <th scope="col">Nand_SN0</th>
-                        <th scope="col">Nand_SN1</th>
-                        <th scope="col">Check-In Time</th>
-                        <th scope="col">Check-Out Time</th>
-                        <th scope="col">Board Status</th>
-                        <th scope="col">Radar</th>
-                        <th scope="col">Remark</th>
-                    </tr>
-                </thead>
-                <tbody id="searchResults">
-                    <!-- Search results will be dynamically added here -->
-                </tbody>
-            </table>
+            <div class="test-records mt-4">
+                <h3>Test Records</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Station Type</th>
+                            <th>Start Time</th>
+                            <th>Stop Time</th>
+                            <th>Result</th>
+                            <th>Site</th>
+                            <th>Operator</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testRecords">
+                        <!-- Test records will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
         </main>
     </div>
 </div>
@@ -304,60 +252,47 @@
             dateFormat: "Y-m-d",
         });
 
-        $('#filterForm').on('submit', function(e) {
+        $('#trackForm').on('submit', function(e) {
             e.preventDefault();
-            var dateTimeRange = $('#dateTimeRange').val();
-            var site = $('#site').val();
-            var product_code = $('#product_code').val();
-            var project_name = $('#project_name').val();
-            var subproject_name = $('#subproject_name').val();
-            var result = $('#result').val();
-
-            var data = {
-                dateTimeRange: dateTimeRange,
-                site: site,
-                product_code: product_code,
-                project_name: project_name,
-                subproject_name: subproject_name,
-                result: result
-            };
+            var serialNumber = $('#serialNumber').val();
 
             $.ajax({
                 type: 'GET',
-                url: '{% url "filter_search_boards_ajax" %}',  // Adjust the URL to match your Django setup
-                data: data,
+                url: '{% url "track_board_ajax" %}',
+                data: { serial_number: serialNumber },
                 success: function(response) {
-                    var resultsTable = $('#searchResults');
-                    resultsTable.empty();
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        var board = response.board;
+                        var testRecords = response.test_records;
 
-                    if (response && response.customize_message) {
-                        $('.customize_message_html').html(response.customize_message);
+                        var boardInfoHtml = '<h3>Board Information</h3>' +
+                            '<p>Project Name: ' + board.project_name + '</p>' +
+                            '<p>Serial Number: ' + board.serial_number + '</p>' +
+                            '<p>Product Code: ' + board.product_code + '</p>' +
+                            '<p>Site: ' + board.site + '</p>' +
+                            '<p>Status: ' + board.status + '</p>';
+
+                        $('.board-info').html(boardInfoHtml);
+
+                        var testRecordsHtml = '';
+                        $.each(testRecords, function(index, record) {
+                            testRecordsHtml += '<tr>' +
+                                '<td>' + record.station_type + '</td>' +
+                                '<td>' + record.start_time + '</td>' +
+                                '<td>' + record.stop_time + '</td>' +
+                                '<td>' + record.result + '</td>' +
+                                '<td>' + record.site + '</td>' +
+                                '<td>' + record.operator + '</td>' +
+                                '<td>' + record.remark + '</td>' +
+                                '</tr>';
+                        });
+                        $('#testRecords').html(testRecordsHtml);
                     }
-
-                    $.each(response.results, function(index, result) {
-                        var row = '<tr>' +
-                            '<td>' + result.project_config + '</td>' +
-                            '<td>' + result.test_item_name + '</td>' +
-                            '<td>/</td>' +
-                            '<td>' + result.product_code + '</td>' +
-                            '<td>' + result.subproject_name + '</td>' +
-                            '<td>' + result.site + '</td>' +
-                            '<td>' + result.board_number + '</td>' +
-                            '<td>' + result.configuration + '</td>' +
-                            '<td>' + result.APN + '</td>' +
-                            '<td>' + result.first_GS_sn + '</td>' +
-                            '<td>' + result.second_GS_sn + '</td>' +
-                            '<td>' + result.checkin_time + '</td>' +
-                            '<td>' + result.checkout_time + '</td>' +
-                            '<td>' + result.status + '</td>' +
-                            '<td>' + result.radar + '</td>' +
-                            '<td>' + result.remark + '</td>' +
-                            '</tr>';
-                        resultsTable.append(row);
-                    });
                 },
                 error: function(error) {
-                    alert('Error submitting data.');
+                    alert('Error fetching board information.');
                 }
             });
         });
