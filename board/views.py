@@ -18,6 +18,7 @@ from django.core.exceptions import ObjectDoesNotExist
 # ban csrf
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
 
 
 # 定义字符串列表
@@ -875,20 +876,20 @@ def get_overtime_boards(request):
 
 @csrf_exempt
 def filter_boards(request):
-    context={}
-    project_name_set=Board.objects.values_list('project_name',flat=True).distinct()
-    build_name_set=Board.objects.values_list('subproject_name',flat=True).distinct()
-    result_set=TestRecord.objects.values_list('result',flat=True).distinct()
-    product_code_set=Board.objects.values_list('product_code',flat=True).distinct()
-    site_set=Board.objects.values_list('site',flat=True).distinct()
-    
-    context["site_set"]=site_set
-    context["product_code_set"]=product_code_set
-    context["project_name_set"]=project_name_set
-    context["build_name_set"]=build_name_set
-    context["result_set"]=result_set
-    
-    return render(request, "board/batch_search.html",context)
+    context = {}
+    project_name_set = Board.objects.values_list('project_name', flat=True).distinct()
+    build_name_set = Board.objects.values_list('subproject_name', flat=True).distinct()
+    result_set = TestRecord.objects.values_list('result', flat=True).distinct()
+    product_code_set = Board.objects.values_list('product_code', flat=True).distinct()
+    site_set = Board.objects.values_list('site', flat=True).distinct()
+
+    context["site_set"] = site_set
+    context["product_code_set"] = product_code_set
+    context["project_name_set"] = project_name_set
+    context["build_name_set"] = build_name_set
+    context["result_set"] = result_set
+
+    return render(request, "board/batch_search.html", context)
 
 @csrf_exempt
 def filter_search_boards_ajax(request):
@@ -919,8 +920,12 @@ def filter_search_boards_ajax(request):
     if result:
         boards = boards.filter(testrecord__result=result)
 
+    paginator = Paginator(boards, 10)  # 每页显示10条记录
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     response = []
-    for board in boards:
+    for board in page_obj:
         checkin_record = board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first()
         checkout_record = board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first()
         error_record = board.errorrecord_set.first()
@@ -936,14 +941,18 @@ def filter_search_boards_ajax(request):
             'APN': board.APN,
             'first_GS_sn': board.first_GS_sn,
             'second_GS_sn': board.second_GS_sn,
-            'checkin_time': checkin_record.start_time if checkin_record else '',
-            'checkout_time': checkout_record.start_time if checkout_record else '',
+            'checkin_time': checkin_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkin_record else '',
+            'checkout_time': checkout_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkout_record else '',
             'status': board.status,
             'radar': error_record.radar if error_record else '',
             'remark': error_record.remark if error_record else '',
         })
 
-    return JsonResponse({'results': response})
+    return JsonResponse({
+        'results': response,
+        'total_pages': paginator.num_pages,
+        'current_page': page_obj.number
+    })
 
 @csrf_exempt
 def track_board(request):
@@ -951,11 +960,15 @@ def track_board(request):
     return render(request, 'board/single_board_track.html', context)
 
 @csrf_exempt
-def track_board_ajax(request,serial_number):
-    print("nihao")
+def track_board_ajax(request, serial_number):
     try:
         board = Board.objects.get(serial_number=serial_number)
         test_records = TestRecord.objects.filter(board=board)
+
+        # 分页
+        paginator = Paginator(test_records, 12)  # 每页显示10条记录
+        page_number = request.GET.get('page', 1)  # 获取当前页码，默认为第一页
+        page_obj = paginator.get_page(page_number)
 
         board_data = {
             'serial_number': board.serial_number,
@@ -973,11 +986,11 @@ def track_board_ajax(request,serial_number):
         }
 
         test_records_data = []
-        for record in test_records:
+        for record in page_obj:
             test_records_data.append({
                 'station_type': record.station_type,
-                'start_time': record.start_time,
-                'stop_time': record.stop_time,
+                'start_time': record.start_time.strftime('%Y/%m/%d %H:%M:%S'),
+                'stop_time': record.stop_time.strftime('%Y/%m/%d %H:%M:%S'),
                 'cp_nums': record.cp_nums,
                 'result': record.result,
                 'operator': record.operator,
@@ -986,7 +999,9 @@ def track_board_ajax(request,serial_number):
 
         return JsonResponse({
             'board': board_data,
-            'test_records': test_records_data
+            'test_records': test_records_data,
+            'total_pages': paginator.num_pages,
+            'current_page': page_obj.number,
         })
 
     except Board.DoesNotExist:

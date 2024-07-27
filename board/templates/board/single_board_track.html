@@ -224,7 +224,7 @@
 
             <div class="board-info mt-4 hidden">
                 <h3>Board Information</h3>
-                <table class="table">
+                <table class="table table-bordered text-center">
                     <thead>
                         <tr>
                             <th>Serial Number</th>
@@ -250,7 +250,7 @@
 
             <div class="test-records mt-4 hidden">
                 <h3>Test Records</h3>
-                <table class="table">
+                <table class="table table-striped text-center">
                     <thead>
                         <tr>
                             <th>Station Type</th>
@@ -267,6 +267,8 @@
                     </tbody>
                 </table>
             </div>
+
+            <div id="pagination" class="mt-4"></div> <!-- 分页按钮容器 -->
         </main>
     </div>
 </div>
@@ -291,9 +293,9 @@
         });
     });
 
-    function submitData() {
+    function submitData(page=1) {
         const serialNumber = document.getElementById("serialNumberInput").value;
-        fetch(`/board/track_board_ajax/${serialNumber}/`, {
+        fetch(`/board/track_board_ajax/${serialNumber}/?page=${page}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
             },
@@ -340,6 +342,13 @@
                         '</tr>';
                 });
                 document.getElementById('testRecords').innerHTML = testRecordsHtml;
+
+                // 添加分页按钮
+                let paginationHtml = '';
+                for (let i = 1; i <= data.total_pages; i++) {
+                    paginationHtml += `<button onclick="submitData(${i})" class="btn ${i === data.current_page ? 'btn-primary' : 'btn-secondary'}">${i}</button>`;
+                }
+                document.getElementById('pagination').innerHTML = paginationHtml;
             }
         })
         .catch(error => {

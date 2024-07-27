@@ -91,6 +91,30 @@
             outline: 0;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
+
+        #searchReminder {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #dc3545;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            margin: 0 2px;
+        }
     </style>
 
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
@@ -276,6 +300,8 @@
                     <!-- Search results will be dynamically added here -->
                 </tbody>
             </table>
+
+            <div class="pagination"></div> <!-- 分页按钮容器 -->
         </main>
     </div>
 </div>
@@ -306,62 +332,74 @@
 
         $('#filterForm').on('submit', function(e) {
             e.preventDefault();
-            var dateTimeRange = $('#dateTimeRange').val();
-            var site = $('#site').val();
-            var product_code = $('#product_code').val();
-            var project_name = $('#project_name').val();
-            var subproject_name = $('#subproject_name').val();
-            var result = $('#result').val();
-
-            var data = {
-                dateTimeRange: dateTimeRange,
-                site: site,
-                product_code: product_code,
-                project_name: project_name,
-                subproject_name: subproject_name,
-                result: result
-            };
-
-            $.ajax({
-                type: 'GET',
-                url: '{% url "filter_search_boards_ajax" %}',  // Adjust the URL to match your Django setup
-                data: data,
-                success: function(response) {
-                    var resultsTable = $('#searchResults');
-                    resultsTable.empty();
-
-                    if (response && response.customize_message) {
-                        $('.customize_message_html').html(response.customize_message);
-                    }
-
-                    $.each(response.results, function(index, result) {
-                        var row = '<tr>' +
-                            '<td>' + result.project_config + '</td>' +
-                            '<td>' + result.test_item_name + '</td>' +
-                            '<td>/</td>' +
-                            '<td>' + result.product_code + '</td>' +
-                            '<td>' + result.subproject_name + '</td>' +
-                            '<td>' + result.site + '</td>' +
-                            '<td>' + result.board_number + '</td>' +
-                            '<td>' + result.configuration + '</td>' +
-                            '<td>' + result.APN + '</td>' +
-                            '<td>' + result.first_GS_sn + '</td>' +
-                            '<td>' + result.second_GS_sn + '</td>' +
-                            '<td>' + result.checkin_time + '</td>' +
-                            '<td>' + result.checkout_time + '</td>' +
-                            '<td>' + result.status + '</td>' +
-                            '<td>' + result.radar + '</td>' +
-                            '<td>' + result.remark + '</td>' +
-                            '</tr>';
-                        resultsTable.append(row);
-                    });
-                },
-                error: function(error) {
-                    alert('Error submitting data.');
-                }
-            });
+            submitData(1); // 初次提交查询时，分页从第1页开始
         });
     });
+
+    function submitData(page) {
+        var dateTimeRange = $('#dateTimeRange').val();
+        var site = $('#site').val();
+        var product_code = $('#product_code').val();
+        var project_name = $('#project_name').val();
+        var subproject_name = $('#subproject_name').val();
+        var result = $('#result').val();
+
+        var data = {
+            dateTimeRange: dateTimeRange,
+            site: site,
+            product_code: product_code,
+            project_name: project_name,
+            subproject_name: subproject_name,
+            result: result,
+            page: page
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '{% url "filter_search_boards_ajax" %}',
+            data: data,
+            success: function(response) {
+                var resultsTable = $('#searchResults');
+                resultsTable.empty();
+
+                if (response && response.customize_message) {
+                    $('.customize_message_html').html(response.customize_message);
+                }
+
+                $.each(response.results, function(index, result) {
+                    var row = '<tr>' +
+                        '<td>' + result.project_config + '</td>' +
+                        '<td>' + result.test_item_name + '</td>' +
+                        '<td>/</td>' +
+                        '<td>' + result.product_code + '</td>' +
+                        '<td>' + result.subproject_name + '</td>' +
+                        '<td>' + result.site + '</td>' +
+                        '<td>' + result.board_number + '</td>' +
+                        '<td>' + result.configuration + '</td>' +
+                        '<td>' + result.APN + '</td>' +
+                        '<td>' + result.first_GS_sn + '</td>' +
+                        '<td>' + result.second_GS_sn + '</td>' +
+                        '<td>' + result.checkin_time + '</td>' +
+                        '<td>' + result.checkout_time + '</td>' +
+                        '<td>' + result.status + '</td>' +
+                        '<td>' + result.radar + '</td>' +
+                        '<td>' + result.remark + '</td>' +
+                        '</tr>';
+                    resultsTable.append(row);
+                });
+
+                // 添加分页按钮
+                let paginationHtml = '';
+                for (let i = 1; i <= response.total_pages; i++) {
+                    paginationHtml += `<button onclick="submitData(${i})" class="btn ${i === response.current_page ? 'btn-primary' : 'btn-secondary'}">${i}</button>`;
+                }
+                $('.pagination').html(paginationHtml);
+            },
+            error: function(error) {
+                alert('Error submitting data.');
+            }
+        });
+    }
 </script>
 </body>
 </html>
