@@ -91,6 +91,21 @@
           outline: 0;
           box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
       }
+
+      #searchReminder {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #dc3545;
+            background-color: #f8f9fa;
+            height: 500px; /* 设置固定高度 */
+            line-height: 500px; /* 垂直居中内容 */
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
@@ -228,12 +243,13 @@
         </div>
       </div>
 
-      <div class="customize_message_html">
-      
-      </div>
+      <hr>
+      <div class="customize_message_html"></div>
+
+      <div id="searchReminder">请筛选后进行查询</div>
 
       <!-- Table -->
-      <table class="table mt-4">
+      <table class="table mt-4 board-table hidden">
         <thead>
             <tr>
                 <th scope="col">No.</th>
@@ -603,6 +619,9 @@
                 success: function(response) {
                     var resultsTable = $('#searchResults');
                     resultsTable.empty();
+
+                    document.getElementById("searchReminder").classList.add("hidden");
+                    document.querySelector(".board-table").classList.remove("hidden");
 
                     if (response && response.customize_message) {
                         $('.customize_message_html').html(response.customize_message);

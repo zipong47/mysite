@@ -98,7 +98,8 @@
             font-size: 1.2rem;
             color: #dc3545;
             background-color: #f8f9fa;
-            padding: 20px;
+            height: 500px; /* 设置固定高度 */
+            line-height: 500px; /* 垂直居中内容 */
             border-radius: 5px;
         }
 
@@ -114,6 +115,11 @@
 
         .pagination button {
             margin: 0 2px;
+        }
+
+        #filterForm .form-group{
+            margin-left: 3px;
+            margin-bottom: 7px;
         }
     </style>
 
@@ -273,9 +279,10 @@
             </form>
 
             <div class="customize_message_html"></div>
-
+            <hr>
+            <div id="searchReminder">请筛选后进行查询</div>
             <!-- Table -->
-            <table class="table mt-4">
+            <table class="table mt-4 board-table hidden">
                 <thead>
                     <tr>
                         <th scope="col">Test Catagory</th>
@@ -359,6 +366,9 @@
             url: '{% url "filter_search_boards_ajax" %}',
             data: data,
             success: function(response) {
+                document.getElementById("searchReminder").classList.add("hidden");
+                document.querySelector(".board-table").classList.remove("hidden");
+
                 var resultsTable = $('#searchResults');
                 resultsTable.empty();
 

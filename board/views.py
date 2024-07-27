@@ -680,7 +680,6 @@ def search_eception(request):
                             'cp_nums': test_record.cp_nums,
                             'stop_time': test_record.stop_time,
                             'result': test_record.result,
-                            'site': test_record.site,
                             'operator': test_record.operator,
                             'remark': test_record.remark,
                         },
