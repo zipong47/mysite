@@ -75,9 +75,10 @@
 
         .input-group {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            justify-content: center; /* 居中对齐 */
             margin-bottom: 20px;
+            width: 75%;
+            padding-left: 20%;
         }
 
         .flatpickr-input {
@@ -99,6 +100,10 @@
             margin-top: 20px;
             font-size: 1.2rem;
             color: #dc3545;
+            background-color: #f8f9fa;
+            height: 500px; /* 设置固定高度 */
+            line-height: 500px; /* 垂直居中内容 */
+            border-radius: 5px;
         }
 
         .hidden {
@@ -107,7 +112,7 @@
     </style>
 
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
-    <link href="{% static 'fontawesome-free-6.5.2-web/css/all.min.css' %}" rel="stylesheet"  crossorigin="anonymous">
+    <link href="{% static 'fontawesome-free-6.5.2-web/css/all.min.css' %}" rel="stylesheet" crossorigin="anonymous">
 </head>
 <body>
 
@@ -207,7 +212,7 @@
                 <h1 class="h2">单板查询</h1>
             </div>
 
-            <div class="input-group" style="width: 67%;">
+            <div class="input-group">
                 <input type="text" class="form-control" id="serialNumberInput" placeholder="请输入sn" onkeydown="handleKeyDown(event)">
                 <div class="input-group-append" style="margin-left: 8px;">
                     <button class="btn btn-primary" type="button" onclick="submitData()">提交</button>
