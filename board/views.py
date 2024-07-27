@@ -990,4 +990,4 @@ def track_board_ajax(request,serial_number):
         })
 
     except Board.DoesNotExist:
-        return JsonResponse({'error': 'Board not found'})
+        return JsonResponse({'error': '没找到该SN的板子'}, status=404)
