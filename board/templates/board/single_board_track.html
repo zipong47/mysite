@@ -109,6 +109,26 @@
         .hidden {
             display: none;
         }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
@@ -215,7 +235,7 @@
             <div class="input-group">
                 <input type="text" class="form-control" id="serialNumberInput" placeholder="请输入sn" onkeydown="handleKeyDown(event)">
                 <div class="input-group-append" style="margin-left: 8px;">
-                    <button class="btn btn-primary" type="button" onclick="submitData()">提交</button>
+                    <button class="btn btn-primary" type="button" onclick="showSpinner()">提交</button>
                     <button class="btn btn-outline-secondary" type="button" onclick="clearInput()" title="Clear input"><i class="fa fa-times"></i></button>
                 </div>
             </div>
@@ -273,6 +293,12 @@
     </div>
 </div>
 
+<div class="overlay" id="overlay">
+    <div class="spinner-border text-primary" id="spinner" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/feather.min.js' %}"></script>
 <script src="{% static 'js/Chart.min.js' %}"></script>
@@ -293,7 +319,22 @@
         });
     });
 
+    function getRandomDelay(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function showSpinner() {
+        document.getElementById("overlay").style.display = "flex";
+        document.querySelector(".board-info").classList.add("hidden");
+        document.querySelector(".test-records").classList.add("hidden");
+        document.querySelector("#pagination").innerHTML = ''; // 清空分页按钮
+        const delay = getRandomDelay(200, 500); // 获取0.2秒到0.5秒之间的随机毫秒数
+        console.log('Delay:', delay);
+        setTimeout(submitData, delay);
+    }
+
     function submitData(page=1) {
+        document.getElementById("overlay").style.display = "none"; // 隐藏spinner
         const serialNumber = document.getElementById("serialNumberInput").value;
         fetch(`/board/track_board_ajax/${serialNumber}/?page=${page}`, {
             headers: {
@@ -358,7 +399,7 @@
 
     function handleKeyDown(event) {
         if (event.key === "Enter") {
-            submitData();
+            showSpinner();
         }
     }
 

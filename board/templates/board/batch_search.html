@@ -121,6 +121,26 @@
             margin-left: 3px;
             margin-bottom: 7px;
         }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
@@ -313,6 +333,13 @@
     </div>
 </div>
 
+<div class="overlay" id="overlay">
+    <div class="spinner-border text-primary" id="spinner" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/feather.min.js' %}"></script>
 <script src="{% static 'js/Chart.min.js' %}"></script>
@@ -339,11 +366,33 @@
 
         $('#filterForm').on('submit', function(e) {
             e.preventDefault();
-            submitData(1); // 初次提交查询时，分页从第1页开始
+            showSpinner();
+        });
+
+        $(document).on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                showSpinner();
+            }
         });
     });
 
+    function getRandomDelay(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function showSpinner() {
+        document.getElementById("overlay").style.display = "flex";
+        document.querySelector(".board-table").classList.add("hidden");
+        document.querySelector(".customize_message_html").classList.add("hidden");
+        document.querySelector(".pagination").innerHTML = ''; // 清空分页按钮
+        const delay = getRandomDelay(200, 500); // 获取0.2秒到0.5秒之间的随机毫秒数
+        console.log('Delay:', delay);
+        setTimeout(submitData, delay);
+    }
+
     function submitData(page) {
+        document.getElementById("overlay").style.display = "none"; // 隐藏spinner
         var dateTimeRange = $('#dateTimeRange').val();
         var site = $('#site').val();
         var product_code = $('#product_code').val();
@@ -374,6 +423,7 @@
 
                 if (response && response.customize_message) {
                     $('.customize_message_html').html(response.customize_message);
+                    $('.customize_message_html').removeClass("hidden");
                 }
 
                 $.each(response.results, function(index, result) {
