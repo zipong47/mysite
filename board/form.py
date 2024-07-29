@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy
 class EnvReportForm(forms.Form):
     CHOICES=[('Valkyrie','Valkyrie'),('Bishop','Bishop'),('Divo','Divo')]
     project_name_select_field=forms.ChoiceField(choices=CHOICES, label='Choose an project name')
-    project_config=forms.CharField(label='输入项目config',max_length=100)
-    subproject_field=forms.CharField(label='输入阶段',max_length=100)
+    project_config=forms.CharField(label='输入项目配置',max_length=100)
+    subproject_field=forms.CharField(label='输入Build阶段',max_length=100)
     env_report_file_field=forms.FileField(label='Upload a env file')
 
 class EditTestPlanForm(forms.ModelForm):

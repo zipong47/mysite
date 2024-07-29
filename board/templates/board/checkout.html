@@ -124,6 +124,21 @@
           outline: 0;
           box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
       }
+
+      #searchReminder {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #dc3545;
+            background-color: #f8f9fa;
+            height: 500px; /* 设置固定高度 */
+            line-height: 500px; /* 垂直居中内容 */
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
     <!-- Custom styles for this template -->
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
@@ -174,7 +189,7 @@
             <span data-feather="plus-circle" class="align-text-bottom"></span>
           </a>
         </h6>
-        <ul class="nav flex-column mb-2">
+        <ul class="nav flex-column mb-2" id="ul_header">
           <li class="nav-item">
             <a class="nav-link" href="{% url 'check_in' %}">
               <span data-feather="file-text" class="align-text-bottom"></span>
@@ -250,6 +265,8 @@
       </div>
       {% endif %}
 
+      <div id="searchReminder">请输入SN进行查询</div>
+
       <div class="row test_plan_table">
 
       </div>
@@ -268,17 +285,16 @@
     <script src="{% static 'js/jquery-3.7.1.js' %}"></script>
     <script>
       $(document).ready(function () {
-        // each 是 为每一个匹配的元素 执行定义的方法
-          $("#ul_header").find("li").each(function () {
-            var a = $(this).find("a");
-            // location.pathname 获取 当前浏览器上的url 地址
-            if ($(a).attr("href") === location.pathname) {
-              $(a).addClass("active");
-            } else {
-              $(a).removeClass("active");
-            }
-          }
-      )});
+          // 遍历所有导航项并检查是否匹配当前路径
+          $("#ul_header li a").each(function () {
+              var a = $(this);
+              if (a.attr("href") === location.pathname) {
+                  a.addClass("active");
+              } else {
+                  a.removeClass("active");
+              }
+          });
+      });
       
       function submitData() {
           const productCode = document.getElementById("productInput").value;
@@ -303,6 +319,9 @@
           .then(data => {
               const tableBody = document.querySelector('.test_plan_table');
               tableBody.innerHTML = data.table;
+
+              document.getElementById("searchReminder").classList.add("hidden");
+
               const dailyTable = document.querySelector('.daily_table_html');
               dailyTable.textContent = ''
               dailyTable.innerHTML = data.daily_table_html;

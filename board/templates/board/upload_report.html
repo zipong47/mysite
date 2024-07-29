@@ -10,7 +10,6 @@
 
 {% load static %}
 <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet"  crossorigin="anonymous">
-    <!-- Favicons -->
 <meta name="theme-color" content="#712cf9">
 
 
@@ -166,24 +165,32 @@
 
     <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Upload</h1>
+        <h1 class="h2">录入报告</h1>
       </div>
 
       <div class="row g-3">
 
-        <div class=col-md-6>
-          <form action="{% url 'get_env_report' %}" method="post" enctype= multipart/form-data>
-            {{ form }}
-            <input type="submit" value="Submit">
-          </form>
+        <div class=col-md-4 style="border-right: 1px solid #c5bdbd;height: 100%">
+            <form action="{% url 'get_env_report' %}" method="post" enctype= multipart/form-data>
+              {{ form.as_p }}
+              <input type="submit" value="Submit">
+            </form>
+            <!-- 显示消息 alert-{{ message.tags }} -->
+            {% if messages %}
+            <div class="messages" style="margin: 20px;">
+              {% for message in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ message }}
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        {% if messages %}
-        <ul class="messages">
-          {% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
+
+        <div class="col-md-8">
+          <h4>上传报告示例</h4>
+          <hr>
+        </div>
       </div>
       
     </main>
@@ -203,17 +210,15 @@
     <script src="{% static 'js/jquery-3.7.1.js' %}"></script>
     <script>
       $(document).ready(function () {
-        // 遍历所有导航项并检查是否匹配当前路径
-        $("#ul_header li a").each(function () {
-          var a = $(this);
-          console.log("a: " + a.attr("href"));
-          console.log("location.pathname: " + location.pathname);
-          if (a.attr("href") === location.pathname) {
-            a.addClass("active");
-          } else {
-            a.removeClass("active");
-          }
-        });
+          // 遍历所有导航项并检查是否匹配当前路径
+          $("#ul_header li a").each(function () {
+              var a = $(this);
+              if (a.attr("href") === location.pathname) {
+                  a.addClass("active");
+              } else {
+                  a.removeClass("active");
+              }
+          });
       });
       
     </script>

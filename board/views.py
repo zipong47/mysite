@@ -178,7 +178,7 @@ def checkin_ajax(request,sn_str):
         try:
             test_schedule=TestSchedule.objects.filter(serial_number=board,cp_nums=current_cp).get()
         except TestSchedule.DoesNotExist:
-            messages.error(request,"未在数据库中查到关于该MLB的test plan相关信息!\n")
+            messages.error(request,"未在数据库中查到关于该MLB的测试计划!\n")
             return JsonResponse({'redirect_url': '/board/checkin'}, status=400)
 
         test_plan_list=test_schedule.test_sequence.split("→")
@@ -369,13 +369,9 @@ def get_env_report(request):
         form = EnvReportForm(request.POST,request.FILES)
         if form.is_valid():
             # info_dic=form.cleaned_data['project_name_select_field']
-            dic=form.cleaned_data
-            print(dic)
             project_name=request.POST['project_name_select_field']
             project_config=request.POST['project_config']
             subproject_name=request.POST['subproject_field']
-            print("project_name:"+project_name)
-            print("subproject_name:"+subproject_name)
             file_data=request.FILES['env_report_file_field']
             file_absolute_path=os.path.join(settings.BASE_DIR, 'board\\static\\download\\')
             file_absolute_path=os.path.join(file_absolute_path, datetime.now().strftime("%Y%m%d_%H%M%S_")+file_data.name)
@@ -387,18 +383,30 @@ def get_env_report(request):
             workbook=load_workbook(file_absolute_path)
             worksheet=workbook['sheet1']
             total_rows=worksheet.max_row
+            exist_board_list=[]
+            # [7] APN、[8] HHPN、[9] First GS SN、[10] Second GS SN、[11] Site、[12] Product Code
             for each in worksheet.iter_rows(min_row=3):
-                sn=each[4].value
-                configuration=each[3].value
                 board_num=each[2].value
+                configuration=each[3].value
+                sn=each[4].value
                 test_item=each[5].value
                 cp_num=handle_cp_str(each[6].value)
-                a_board=Board(project_name=project_name,project_config=project_config,subproject_name=subproject_name,
+                apn=each[7].value
+                hhpn=each[8].value
+                first_gs_sn=each[9].value
+                second_gs_sn=each[10].value
+                site=each[11].value
+                product_code=each[12].value
+                if not Board.objects.filter(serial_number=sn).exists():
+                    a_board=Board(project_name=project_name,project_config=project_config,subproject_name=subproject_name,
                             serial_number=sn,configuration=configuration,board_number=board_num,
-                            test_item_name=test_item,cp_nums=cp_num)
-                a_board.save()
-            # return HttpResponseRedirect("/board/get_env_report")
-            return HttpResponseRedirect(request.path)
+                            test_item_name=test_item,cp_nums=cp_num,product_code=product_code,APN=apn,HHPN=hhpn,
+                            first_GS_sn=first_gs_sn,second_GS_sn=second_gs_sn,site=site)
+                    a_board.save()
+                else:
+                    exist_board_list.append(sn)
+                        
+            return HttpResponseRedirect(request.path, {"form": form, "exist_board_list": exist_board_list})
     else:
         form = EnvReportForm()
     return render(request, "board/upload_report.html", {"form": form})
