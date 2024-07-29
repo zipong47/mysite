@@ -364,7 +364,7 @@
               <select class="form-control" id="edit_board_status" name="board_status">
                 <option value="damage">Damage</option>
                 <option value="cancel">Cancel</option>
-                <option value="cut">Cut</option>
+   tabindex="   <option value="cut">Cut</option>
               </select>
             </div>
             <div class="mb-3">
@@ -653,53 +653,14 @@
 
       $('#timeForm').on('submit', function (e) {
         e.preventDefault();
-        var dateTimeRange = $('#dateTimeRange').val();
-        var project = $('#projectDropdown').val();
-        var station = $('#stationDropdown').val();
+        showSpinner();
+      });
 
-        var data = {
-          startTime: dateTimeRange.split(" to ")[0],
-          endTime: dateTimeRange.split(" to ")[1],
-          project: project,
-          station: station
-        };
-
-        $.ajax({
-          type: 'POST',
-          url: '{% url "search_eception" %}',  // Adjust the URL to match your Django setup
-          data: data,
-          success: function (response) {
-            var resultsTable = $('#searchResults');
-            resultsTable.empty();
-
-            document.getElementById("searchReminder").classList.add("hidden");
-            document.querySelector(".board-table").classList.remove("hidden");
-
-            if (response && response.customize_message) {
-              $('.customize_message_html').html(response.customize_message);
-            }
-
-            $.each(response.results, function (index, result) {
-              var row = '<tr>' +
-                '<td>' + (index + 1) + '</td>' +
-                '<td>' + result.board.serial_number + '</td>' +
-                '<td>' + result.test_record.start_time + '</td>' +
-                '<td>' + result.board.project_name + '</td>' +
-                '<td>' + result.test_record.station_type + '</td>' +
-                '<td>' + result.board.status + '</td>' +
-                '<td>' + (result.error_record.fail_message) + '</td>' +
-                '<td>' + result.test_record.site + '</td>' +
-                '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
-                '<td><button class="btn btn-sm btn-primary" onclick="downloadFailPicture(' + result.error_record.id + ')">Download Fail Picture</button></td>' +
-                '</tr>';
-              resultsTable.append(row);
-              console.log("result.error_record.id: " + result.error_record.id);
-            });
-          },
-          error: function (error) {
-            alert('Error submitting data.');
-          }
-        });
+      $(document).on('keypress', function (e) {
+        if (e.which === 13) {
+          e.preventDefault();
+          showSpinner();
+        }
       });
 
       $('#overtimeBoardModal').on('show.bs.modal', function (e) {
@@ -729,6 +690,57 @@
         });
       });
     });
+
+    function submitData(e){
+      document.getElementById("overlay").style.display = "none"; // 隐藏spinner
+      var dateTimeRange = $('#dateTimeRange').val();
+      var project = $('#projectDropdown').val();
+      var station = $('#stationDropdown').val();
+
+      var data = {
+        startTime: dateTimeRange.split(" to ")[0],
+        endTime: dateTimeRange.split(" to ")[1],
+        project: project,
+        station: station
+      };
+
+      $.ajax({
+        type: 'POST',
+        url: '{% url "search_eception" %}',  // Adjust the URL to match your Django setup
+        data: data,
+        success: function (response) {
+          var resultsTable = $('#searchResults');
+          resultsTable.empty();
+
+          document.getElementById("searchReminder").classList.add("hidden");
+          document.querySelector(".board-table").classList.remove("hidden");
+
+          if (response && response.customize_message) {
+            $('.customize_message_html').html(response.customize_message);
+          }
+
+          $.each(response.results, function (index, result) {
+            var row = '<tr>' +
+              '<td>' + (index + 1) + '</td>' +
+              '<td>' + result.board.serial_number + '</td>' +
+              '<td>' + result.test_record.start_time + '</td>' +
+              '<td>' + result.board.project_name + '</td>' +
+              '<td>' + result.test_record.station_type + '</td>' +
+              '<td>' + result.board.status + '</td>' +
+              '<td>' + (result.error_record.fail_message) + '</td>' +
+              '<td>' + result.test_record.site + '</td>' +
+              '<td><button type="button" class="btn btn-primary" onclick="editErrorRecord(\'' + result.error_record.id + '\')">Edit</button></td>' +
+              '<td><button class="btn btn-sm btn-primary" onclick="downloadFailPicture(' + result.error_record.id + ')">Download Fail Picture</button></td>' +
+              '</tr>';
+            resultsTable.append(row);
+            console.log("result.error_record.id: " + result.error_record.id);
+          });
+        },
+        error: function (error) {
+          alert('Error submitting data.');
+        }
+      });
+    }
 
     function downloadFailPicture(recordId) {
       window.location.href = '/board/download_fail_picture/' + recordId + '/';
