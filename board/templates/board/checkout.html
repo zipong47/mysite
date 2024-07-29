@@ -147,6 +147,24 @@
     .hidden {
       display: none;
     }
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
   </style>
   <!-- Custom styles for this template -->
   <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
@@ -260,7 +278,7 @@
               <input type="text" class="form-control" id="productInput" placeholder="请输入sn"
                 onkeydown="handleKeyDown(event)">
               <div class="input-group-append" style="margin-left: 8px;">
-                <button class="btn btn-primary" type="button" onclick="submitData()">提交</button>
+                <button class="btn btn-primary" type="button" onclick="showSpinner()">提交</button>
                 <button class="btn btn-outline-secondary" type="button" onclick="clearInput()" title="Clear input"><i
                     class="fa fa-times"></i></button>
                 <button class="btn btn-info btn-outline-third" type="button" onclick="showTodayHistory()"
@@ -294,6 +312,13 @@
 
     </div>
   </div>
+
+  <div class="overlay" id="overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'js/feather.min.js' %}"></script>
   <script src="{% static 'js/Chart.min.js' %}"></script>
@@ -310,10 +335,30 @@
           a.removeClass("active");
         }
       });
+
+      $(document).on('keypress', function (e) {
+        if (e.which === 13) {
+          e.preventDefault();
+          showSpinner();
+        }
+      });
     });
+
+    function getRandomDelay(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function showSpinner() {
+      document.getElementById("overlay").style.display = "flex";
+      document.querySelector("#searchReminder").classList.add("hidden");
+      const delay = getRandomDelay(100, 300); // 获取0.1秒到0.3秒之间的随机毫秒数
+      console.log('Delay:', delay);
+      setTimeout(submitData, delay);
+    }
 
     function submitData() {
       const productCode = document.getElementById("productInput").value;
+      document.getElementById("overlay").style.display = "none"; // 隐藏spinner
       // 在此处添加将 productCode 发送到后端的逻辑（例如，使用 AJAX）
       const url = `/board/checkout_ajax/${productCode}/`;
       fetch(url, {
@@ -355,9 +400,6 @@
           const fondEndMessage = document.querySelector('.font_end_message');
 
           for (let i = 0; i < order_list.length; i++) {
-            // if (i == test_plan_list.length-1){
-            //   break;
-            // }
             if (stepBoxes[i].textContent.trim() !== order_list[i]) {
               stepBoxes[i].style.backgroundColor = 'red';
               let j = i + 1;
@@ -378,7 +420,7 @@
 
     function handleKeyDown(event) {
       if (event.key === "Enter") {
-        submitData();
+        showSpinner();
       }
     }
 
