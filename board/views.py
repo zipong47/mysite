@@ -1060,7 +1060,10 @@ def export_report(request):
     for board in boards:
         checkin_record = board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first()
         checkout_record = board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first()
-        error_record = board.errorrecord_set.first()
+        error_records = board.errorrecord_set.all()
+
+        radar = '\n'.join([record.radar for record in error_records if record.radar])
+        remark = '\n'.join([record.remark for record in error_records if record.remark])
 
         row = [
             board.project_config,
@@ -1077,8 +1080,8 @@ def export_report(request):
             checkin_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkin_record else '',
             checkout_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkout_record else '',
             board.status,
-            error_record.radar if error_record else '',
-            error_record.remark if error_record else '',
+            radar,
+            remark,
         ]
         ws.append(row)
 
@@ -1096,8 +1099,10 @@ def export_report(request):
         ws.column_dimensions[column].width = adjusted_width
 
     # Create a response
+    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'report_{current_time}.xlsx'
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=report.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={filename}'
     wb.save(response)
 
     return response

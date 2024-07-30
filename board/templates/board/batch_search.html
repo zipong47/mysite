@@ -255,7 +255,7 @@
         });
 
         $('#exportReport').on('click', function () {
-            exportReport();
+            showSpinnerForExport();
         });
     });
 
@@ -271,6 +271,13 @@
         const delay = getRandomDelay(200, 500); // 获取0.2秒到0.5秒之间的随机毫秒数
         console.log('Delay:', delay);
         setTimeout(submitData, delay);
+    }
+
+    function showSpinnerForExport() {
+        document.getElementById("overlay").style.display = "flex";
+        const delay = getRandomDelay(500, 1000); // 获取0.5秒到1秒之间的随机毫秒数
+        console.log('Delay:', delay);
+        setTimeout(exportReport, delay);
     }
 
     function submitData(page) {
@@ -344,43 +351,54 @@
     }
 
     function exportReport() {
-            var dateTimeRange = $('#dateTimeRange').val();
-            var site = $('#site').val();
-            var product_code = $('#product_code').val();
-            var project_name = $('#project_name').val();
-            var subproject_name = $('#subproject_name').val();
-            var result = $('#result').val();
+        document.getElementById("overlay").style.display = "none"; // 隐藏spinner
+        var dateTimeRange = $('#dateTimeRange').val();
+        var site = $('#site').val();
+        var product_code = $('#product_code').val();
+        var project_name = $('#project_name').val();
+        var subproject_name = $('#subproject_name').val();
+        var result = $('#result').val();
 
-            var data = {
-                dateTimeRange: dateTimeRange,
-                site: site,
-                product_code: product_code,
-                project_name: project_name,
-                subproject_name: subproject_name,
-                result: result
-            };
+        var data = {
+            dateTimeRange: dateTimeRange,
+            site: site,
+            product_code: product_code,
+            project_name: project_name,
+            subproject_name: subproject_name,
+            result: result
+        };
 
-            $.ajax({
-                type: 'GET',
-                url: '{% url "export_report" %}',
-                data: data,
-                xhrFields: {
-                    responseType: 'blob'
-                },
-                success: function (response) {
-                    var blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    var url = window.URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'report.xlsx';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                },
-                error: function (error) {
-                    alert('Error exporting report.');
+        $.ajax({
+            type: 'GET',
+            url: '{% url "export_report" %}',
+            data: data,
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (response, status, xhr) {
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                var filename = 'report.xlsx';
+                console.log(disposition); // 输出Content-Disposition的内容，方便调试
+
+                if (disposition) {
+                    var matches = disposition.match(/filename=([^;]+)/);
+                    if (matches && matches[1]) {
+                        filename = matches[1].trim();
+                    }
                 }
-            });
+                var blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            },
+            error: function (error) {
+                alert('Error exporting report.');
+            }
+        });
     }
 </script>
 </body>
