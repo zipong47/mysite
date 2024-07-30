@@ -7,6 +7,8 @@ from board.common import get_request
 from .models import *
 from .form import EnvReportForm,EditTestPlanForm,DisplayEditTestPlanForm
 from openpyxl import load_workbook
+import openpyxl
+from openpyxl.utils import get_column_letter
 
 from django.template import loader
 from django.shortcuts import get_object_or_404, render,redirect
@@ -19,7 +21,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-
 
 # 定义字符串列表
 STATIONS_STRINGS = ["ICT","DFU","FCT","SOC-TEST","WIFI-BT-COND-B","WIFI-BT-COND"]
@@ -1013,3 +1014,90 @@ def track_board_ajax(request, serial_number):
 
     except Board.DoesNotExist:
         return JsonResponse({'error': '没找到该SN的板子'}, status=404)
+    
+@csrf_exempt
+def export_report(request):
+    site = request.GET.get('site', '')
+    dateTimeRange = request.GET.get('dateTimeRange', '')
+    product_code = request.GET.get('product_code', '')
+    project_name = request.GET.get('project_name', '')
+    subproject_name = request.GET.get('subproject_name', '')
+    result = request.GET.get('result', '')
+
+    boards = Board.objects.all()
+
+    if site:
+        boards = boards.filter(site=site)
+    if dateTimeRange:
+        start_time, end_time = dateTimeRange.split(' to ')
+        start_time = datetime.strptime(start_time, '%Y-%m-%d')
+        end_time = datetime.strptime(end_time, '%Y-%m-%d')
+        test_records = TestRecord.objects.filter(start_time__range=(start_time, end_time))
+        boards = boards.filter(testrecord__in=test_records).distinct()
+    if product_code:
+        boards = boards.filter(product_code=product_code)
+    if project_name:
+        boards = boards.filter(project_name=project_name)
+    if subproject_name:
+        boards = boards.filter(subproject_name=subproject_name)
+    if result:
+        boards = boards.filter(testrecord__result=result)
+
+    # Create a workbook and add a worksheet.
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Report"
+
+    # Add headers
+    headers = [
+        'Test Catagory', 'Test', 'Chamber', 'Product Code', 'Build Stage', 'Site',
+        'Unit Number', 'MLB Config', 'APN', 'Nand_SN0', 'Nand_SN1',
+        'Check-In Time', 'Check-Out Time', 'Board Status', 'Radar', 'Remark'
+    ]
+    ws.append(headers)
+
+    # Add data
+    for board in boards:
+        checkin_record = board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first()
+        checkout_record = board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first()
+        error_record = board.errorrecord_set.first()
+
+        row = [
+            board.project_config,
+            board.test_item_name,
+            '/',
+            board.product_code,
+            board.subproject_name,
+            board.site,
+            board.board_number,
+            board.configuration,
+            board.APN,
+            board.first_GS_sn,
+            board.second_GS_sn,
+            checkin_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkin_record else '',
+            checkout_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkout_record else '',
+            board.status,
+            error_record.radar if error_record else '',
+            error_record.remark if error_record else '',
+        ]
+        ws.append(row)
+
+    # Set column widths
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter  # Get the column name
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = adjusted_width
+
+    # Create a response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=report.xlsx'
+    wb.save(response)
+
+    return response
