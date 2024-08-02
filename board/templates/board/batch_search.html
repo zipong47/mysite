@@ -173,6 +173,8 @@
                 <div class="form-group col-auto d-flex align-items-center">
                     <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
                     <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" id="exportReport">导出报告</button>
+                    <!-- 添加“Archived”按钮 -->
+                    <button type="button" class="btn btn-warning mb-2 ml-2 align-middle" id="archiveBoards">Archived</button>
                 </div>
             </form>
 
@@ -183,6 +185,7 @@
             <table class="table mt-4 board-table hidden">
                 <thead>
                     <tr>
+                        <th scope="col"></th>
                         <th scope="col">Test Catagory</th>
                         <th scope="col">Test</th>
                         <th scope="col">Chamber</th>
@@ -257,6 +260,41 @@
         $('#exportReport').on('click', function () {
             showSpinnerForExport();
         });
+
+        // 点击 "Archived" 按钮时，将选中的板子归档
+        // 选择/取消选择所有行
+        $('#selectAll').click(function () {
+            $('.select-checkbox').prop('checked', this.checked);
+        });
+
+        $('#archiveBoards').on('click', function () {
+            var selectedBoards = [];
+            $('.select-checkbox:checked').each(function () {
+                selectedBoards.push($(this).data('id'));
+            });
+            
+            if (selectedBoards.length === 0) {
+                alert('Please select at least one board.');
+                return;
+            }
+
+            // 发送已选中的板子信息到后端
+            $.ajax({
+                type: 'POST',
+                url: '{% url "archive_boards" %}',  // 确保你在 Django 项目中定义了这个 URL
+                data: {
+                    'selected_boards': JSON.stringify(selectedBoards),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    alert('Boards archived successfully.');
+                    // 可以在此更新页面或进行其他操作
+                },
+                error: function (error) {
+                    alert('Error archiving boards.');
+                }
+            });
+        });
     });
 
     function getRandomDelay(min, max) {
@@ -317,6 +355,7 @@
 
                 $.each(response.results, function(index, result) {
                     var row = '<tr>' +
+                        '<td><input type="checkbox" class="select-checkbox" data-id="' + result.serial_number + '"></td>' + // 添加选择框
                         '<td>' + result.project_config + '</td>' +
                         '<td>' + result.test_item_name + '</td>' +
                         '<td>/</td>' +

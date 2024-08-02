@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime
+import json
 
 from mysite import settings
 from board.common import get_request
@@ -1107,3 +1108,19 @@ def export_report(request):
     wb.save(response)
 
     return response
+
+@csrf_exempt
+def archive_boards(request):
+    if request.method == 'POST':
+        selected_boards = json.loads(request.POST.get('selected_boards', '[]'))
+        # 在此处理选中的板子信息，例如更新数据库中的字段以标记为已存档
+        # 例如：
+        # Board.objects.filter(serial_number__in=selected_boards).update(archived=True)
+        for serial_number in selected_boards:
+            print(serial_number)
+            # board = Board.objects.get(serial_number=serial_number)
+            # board.status = 'archived'
+            # board.save()
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'failed'}, status=400)
