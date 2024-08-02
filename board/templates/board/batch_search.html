@@ -323,7 +323,7 @@
                         '<td>' + result.product_code + '</td>' +
                         '<td>' + result.subproject_name + '</td>' +
                         '<td>' + result.site + '</td>' +
-                        '<td>' + result.board_number + '</td>' +
+                        '<td><a href="{% url "track_board" %}?serial_number=' + result.serial_number + '">' + result.board_number + '</a></td>' +
                         '<td>' + result.configuration + '</td>' +
                         '<td>' + result.APN + '</td>' +
                         '<td>' + result.first_GS_sn + '</td>' +

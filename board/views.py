@@ -928,7 +928,7 @@ def filter_search_boards_ajax(request):
     if result:
         boards = boards.filter(testrecord__result=result)
 
-    paginator = Paginator(boards, 10)  # 每页显示10条记录
+    paginator = Paginator(boards, 17)  # 每页显示10条记录
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
@@ -939,6 +939,7 @@ def filter_search_boards_ajax(request):
         error_record = board.errorrecord_set.first()
 
         response.append({
+            'serial_number': board.serial_number,
             'project_config': board.project_config,
             'test_item_name': board.test_item_name,
             'product_code': board.product_code,
