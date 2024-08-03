@@ -929,7 +929,8 @@ def filter_search_boards_ajax(request):
     if result:
         boards = boards.filter(testrecord__result=result)
 
-    paginator = Paginator(boards, 17)  # 每页显示10条记录
+    board_sn_list = list(boards.values_list('serial_number', flat=True))
+    paginator = Paginator(boards, 17)  # 每页显示17条记录
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
@@ -961,7 +962,8 @@ def filter_search_boards_ajax(request):
     return JsonResponse({
         'results': response,
         'total_pages': paginator.num_pages,
-        'current_page': page_obj.number
+        'current_page': page_obj.number,
+        'board_sn_list': board_sn_list
     })
 
 @csrf_exempt
@@ -1122,5 +1124,53 @@ def archive_boards(request):
             # board.status = 'archived'
             # board.save()
         return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'failed'}, status=400)
+
+@csrf_exempt
+def download_archive_boards(request):
+    if request.method == 'POST':
+        selected_boards = json.loads(request.POST.get('selected_boards', '[]'))
+        boards = Board.objects.filter(serial_number__in=selected_boards)
+
+        # 创建 Excel 文件
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Boards Info'
+        
+        # 添加表头
+        headers = ['Serial Number', 'Project Config', 'Test Item Name', 'Product Code', 'Subproject Name', 'Site']
+        ws.append(headers)
+
+        # 添加数据
+        for board in boards:
+            ws.append([
+                board.serial_number,
+                board.project_config,
+                board.test_item_name,
+                board.product_code,
+                board.subproject_name,
+                board.site
+            ])
+        
+        # Set column widths
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter  # Get the column name
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = adjusted_width
+        
+        
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=boards_info.xlsx'
+        wb.save(response)
+        
+        return response
 
     return JsonResponse({'status': 'failed'}, status=400)

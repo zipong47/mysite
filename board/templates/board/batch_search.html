@@ -174,7 +174,8 @@
                     <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
                     <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" id="exportReport">导出报告</button>
                     <!-- 添加“Archived”按钮 -->
-                    <button type="button" class="btn btn-warning mb-2 ml-2 align-middle" id="archiveBoards">Archived</button>
+                    <input id="selectedBoardIds" hidden>
+                    <button type="button" class="btn btn-warning mb-2 ml-2 align-middle" id="archiveBoards">入库</button>
                 </div>
             </form>
 
@@ -185,7 +186,6 @@
             <table class="table mt-4 board-table hidden">
                 <thead>
                     <tr>
-                        <th scope="col"></th>
                         <th scope="col">Test Catagory</th>
                         <th scope="col">Test</th>
                         <th scope="col">Chamber</th>
@@ -220,6 +220,28 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="archiveModal" tabindex="-1" aria-labelledby="archiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="archiveModalLabel">Archive Boards</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要入库所选的MLB吗？您可以先下载MLB信息进行比较，然后选择入库。</p>
+                <!-- 在这里显示筛选信息 -->
+                <div id="filterInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <!-- 下载按钮 -->
+                <button type="button" class="btn btn-primary" id="downloadBoards">下载入库MLB信息</button>
+                <!-- 存档按钮 -->
+                <button type="button" class="btn btn-warning" id="confirmArchive">确认入库</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/feather.min.js' %}"></script>
@@ -260,34 +282,85 @@
         $('#exportReport').on('click', function () {
             showSpinnerForExport();
         });
-
-        // 点击 "Archived" 按钮时，将选中的板子归档
-        // 选择/取消选择所有行
-        $('#selectAll').click(function () {
-            $('.select-checkbox').prop('checked', this.checked);
-        });
-
+        
         $('#archiveBoards').on('click', function () {
-            var selectedBoards = [];
-            $('.select-checkbox:checked').each(function () {
-                selectedBoards.push($(this).data('id'));
-            });
-            
+            var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
             if (selectedBoards.length === 0) {
-                alert('Please select at least one board.');
+                alert('请至少选择一块板子进行入库。');
                 return;
             }
+            // Count the number of board_sn_list
+            length_of_selectedBoards = selectedBoards.length;
+            // 显示筛选信息
+            var filterInfo = `
+            <p>已选择板子的总数: ${length_of_selectedBoards}</p>
+            <p>Site: ${$('#site').val() || '所有'}</p>
+            <p>Date Range: ${$('#dateTimeRange').val() || '所有'}</p>
+            <p>Product Code: ${$('#product_code').val() || '所有'}</p>
+            <p>Project Name: ${$('#project_name').val() || '所有'}</p>
+            <p>Build Stage: ${$('#subproject_name').val() || '所有'}</p>
+            <p>Result: ${$('#result').val() || '所有'}</p>
+        `;
+            $('#filterInfo').html(filterInfo);
 
-            // 发送已选中的板子信息到后端
+            // 显示模态框
+            $('#archiveModal').modal('show');
+        });
+
+        $('#downloadBoards').on('click', function () {
+            var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
+
+            // 使用 AJAX 请求下载信息
             $.ajax({
                 type: 'POST',
-                url: '{% url "archive_boards" %}',  // 确保你在 Django 项目中定义了这个 URL
+                url: '{% url "download_boards" %}',
+                data: {
+                    'selected_boards': JSON.stringify(selectedBoards),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function (response, status, xhr) {
+                    var disposition = xhr.getResponseHeader('Content-Disposition');
+                    var filename = 'boards_info.xlsx';
+
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        var matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                        if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                    }
+
+                    var blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                },
+                error: function (error) {
+                    alert('Error downloading board information.');
+                }
+            });
+        });
+
+        $('#confirmArchive').on('click', function () {
+            var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
+
+            // 发送已选中的板子信息到后端进行存档
+            $.ajax({
+                type: 'POST',
+                url: '{% url "archive_boards" %}',
                 data: {
                     'selected_boards': JSON.stringify(selectedBoards),
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 },
                 success: function (response) {
-                    alert('Boards archived successfully.');
+                    length_of_selectedBoards = selectedBoards.length;
+                    alert('成功入库 ' + length_of_selectedBoards + ' 块板子。');
+                    // 关闭模态框
+                    $('#archiveModal').modal('hide');
                     // 可以在此更新页面或进行其他操作
                 },
                 error: function (error) {
@@ -307,7 +380,6 @@
         document.querySelector(".customize_message_html").classList.add("hidden");
         document.querySelector(".pagination").innerHTML = ''; // 清空分页按钮
         const delay = getRandomDelay(200, 500); // 获取0.2秒到0.5秒之间的随机毫秒数
-        console.log('Delay:', delay);
         setTimeout(submitData, delay);
     }
 
@@ -355,7 +427,6 @@
 
                 $.each(response.results, function(index, result) {
                     var row = '<tr>' +
-                        '<td><input type="checkbox" class="select-checkbox" data-id="' + result.serial_number + '"></td>' + // 添加选择框
                         '<td>' + result.project_config + '</td>' +
                         '<td>' + result.test_item_name + '</td>' +
                         '<td>/</td>' +
@@ -382,6 +453,11 @@
                     paginationHtml += `<button onclick="submitData(${i})" class="btn ${i === response.current_page ? 'btn-primary' : 'btn-secondary'}">${i}</button>`;
                 }
                 $('.pagination').html(paginationHtml);
+
+                // 将所有板子的 SN 添加到一个隐藏的 input 中，方便后续操作
+                $('#selectedBoardIds').val(JSON.stringify(response.board_sn_list));
+                ids = $('#selectedBoardIds').val();
+                console.log(ids);
             },
             error: function(error) {
                 alert('Error submitting data.');
