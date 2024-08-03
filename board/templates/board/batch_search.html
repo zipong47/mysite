@@ -347,26 +347,30 @@
 
         $('#confirmArchive').on('click', function () {
             var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
-
+            length_of_selectedBoards = selectedBoards.length;
+            // 弹出确认提示
+            var confirmation = confirm('确认要入库 '+ length_of_selectedBoards +' 块板子吗?');
             // 发送已选中的板子信息到后端进行存档
-            $.ajax({
-                type: 'POST',
-                url: '{% url "archive_boards" %}',
-                data: {
-                    'selected_boards': JSON.stringify(selectedBoards),
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    length_of_selectedBoards = selectedBoards.length;
-                    alert('成功入库 ' + length_of_selectedBoards + ' 块板子。');
-                    // 关闭模态框
-                    $('#archiveModal').modal('hide');
-                    // 可以在此更新页面或进行其他操作
-                },
-                error: function (error) {
-                    alert('Error archiving boards.');
-                }
-            });
+            if (confirmation){
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "archive_boards" %}',
+                    data: {
+                        'selected_boards': JSON.stringify(selectedBoards),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+
+                        alert('成功入库 ' + length_of_selectedBoards + ' 块板子。');
+                        // 关闭模态框
+                        $('#archiveModal').modal('hide');
+                        // 可以在此更新页面或进行其他操作
+                    },
+                    error: function (error) {
+                        alert('Error archiving boards.');
+                    }
+                });
+            }
         });
     });
 
