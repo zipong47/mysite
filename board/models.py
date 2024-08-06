@@ -78,3 +78,12 @@ class ErrorRecord(models.Model):
 
     def __str__(self):
         return f"ErrorRecord for {self.board.serial_number} with {self.test_record.count()} test records"
+    
+class Device(models.Model):
+    device_name = models.CharField(max_length=100)
+    device_type = models.CharField(max_length=100)
+    device_sn = models.CharField(max_length=100)
+    device_status = models.CharField(max_length=100)
+    device_remark = models.CharField(max_length=100)
+    def __str__(self):
+        return f"{self.device_name}-{self.device_sn}"

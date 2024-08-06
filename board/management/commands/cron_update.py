@@ -34,10 +34,7 @@ def find_first_error_station(test_plan, test_record):
     return None, None
 
 class Command(BaseCommand):
-    help = "Closes the specified poll for voting"
-
-    def add_arguments(self, parser):
-        parser.add_argument("poll_ids", nargs="+", type=int)
+    help = "auto record the test record by crontab"
 
     def handle(self, *args, **options):
         IP="172.16.243.140:80"
