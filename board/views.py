@@ -83,6 +83,7 @@ def index(request):
                         if(checkin_record != None and station_record != None and checkin_record.start_time < station_record.start_time and station_record.result == 'pass'):
                             station_num=station_num+1
                     bu.station_yield_list.append(station_num)
+                    
                     # rate=(station_num/len(checkin_set))*100
                     # rate="{:.2f}%".format(rate)
                     # bu.station_yield_list.append(rate)

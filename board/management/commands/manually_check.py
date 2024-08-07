@@ -49,10 +49,9 @@ class Command(BaseCommand):
         for serial_number in serial_numbers:
             try:
                 board = Board.objects.get(serial_number=serial_number)
-                cp_nums=board.cp_nums
+                current_cp_nums=board.cp_nums
                 if station_type == 'checkout':
-                    cp_nums = cp_nums + 100
-                    board.cp_nums = cp_nums
+                    board.cp_nums = current_cp_nums + 100
                     board.env_finished_flag = False
                     board.save()
                 else:
@@ -62,7 +61,7 @@ class Command(BaseCommand):
                 TestRecord.objects.create(
                     board=board,
                     station_type=station_type,
-                    cp_nums=cp_nums,
+                    cp_nums=current_cp_nums,
                     start_time=custom_time,
                     stop_time=custom_time,  # Use custom_time for stop_time as well
                     result='pass'  # Set default result; adjust as needed

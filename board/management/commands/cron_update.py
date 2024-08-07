@@ -1,3 +1,4 @@
+import json
 from django.core.management.base import BaseCommand, CommandError
 from board.models import *
 from board.common import get_request 
@@ -39,7 +40,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         IP="172.16.243.140:80"
         #station_type_list=["ICT","DFU","FCT","SOC-TEST","WIFI-BT-COND-B","WIFI-BT-COND"]
-        with open("","a") as log:
+        with open("/Users/tony_wei/Desktop/HuangZP/mysite0807/logfile.txt","a") as log:
             log.write(f"update summary at {datetime.now()}\n")
             
         checkin_set=Board.objects.filter(env_finished_flag=True).filter(status__in=["testing","pause"])
@@ -53,12 +54,21 @@ class Command(BaseCommand):
             next_station, index = find_first_error_station(test_plan, test_record)
             if next_station:
                 result_dict=get_request(ip=IP,sn=board_unit.serial_number,station_type=next_station)
+                
                 for key, value in result_dict.items():
+                    # Skip checking for 'failure_message' and 'list_of_failing_tests' keys
+                    if key in ['failure_message', 'list_of_failing_tests']:
+                        continue
                     if value == "" or value is None:
                         print("没记录")
                         continue
                 result_dict["result"] = result_dict["result"].lower()
-
+                # Pretty print the dictionary
+                print("Result Dictionary:")
+                print(json.dumps(result_dict, indent=4, ensure_ascii=False))
+                with open("/Users/tony_wei/Desktop/HuangZP/mysite0807/logfile.txt","a") as log:
+                    log.write(json.dumps(result_dict, indent=4, ensure_ascii=False))
+                    log.write("\n")
                 start_time = datetime.strptime(result_dict["start_time"], "%Y-%m-%d %H:%M:%S")
                 stop_time = datetime.strptime(result_dict["stop_time"], "%Y-%m-%d %H:%M:%S")
                 lastest_record=TestRecord.objects.filter(board=board_unit,cp_nums=board_unit.cp_nums,station_type=next_station).order_by("-start_time").first()
