@@ -57,6 +57,8 @@ class Command(BaseCommand):
                     if value == "" or value is None:
                         print("没记录")
                         continue
+                result_dict["result"] = result_dict["result"].lower()
+
                 start_time = datetime.strptime(result_dict["start_time"], "%Y-%m-%d %H:%M:%S")
                 stop_time = datetime.strptime(result_dict["stop_time"], "%Y-%m-%d %H:%M:%S")
                 lastest_record=TestRecord.objects.filter(board=board_unit,cp_nums=board_unit.cp_nums,station_type=next_station).order_by("-start_time").first()
