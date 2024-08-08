@@ -388,7 +388,7 @@ def get_env_report(request):
             total_rows=worksheet.max_row
             exist_board_list=[]
             # [7] APN、[8] HHPN、[9] First GS SN、[10] Second GS SN、[11] Site、[12] Product Code
-            for each in worksheet.iter_rows(min_row=3):
+            for each in worksheet.iter_rows(min_row=1):
                 board_num=each[2].value
                 configuration=each[3].value
                 sn=each[4].value
@@ -892,7 +892,13 @@ def filter_boards(request):
     result_set = TestRecord.objects.values_list('result', flat=True).distinct()
     product_code_set = Board.objects.values_list('product_code', flat=True).distinct()
     site_set = Board.objects.values_list('site', flat=True).distinct()
-
+    status_set = Board.objects.values_list('status', flat=True).distinct()
+    cp_number_set = Board.objects.values_list('cp_nums', flat=True).distinct()
+    subproject_name_set = Board.objects.values_list('subproject_name', flat=True).distinct()
+    
+    context["subproject_name_set"] = subproject_name_set
+    context["cp_number_set"] = cp_number_set
+    context["status_set"] = status_set
     context["site_set"] = site_set
     context["product_code_set"] = product_code_set
     context["project_name_set"] = project_name_set
@@ -951,6 +957,7 @@ def filter_search_boards_ajax(request):
             'board_number': board.board_number,
             'configuration': board.configuration,
             'APN': board.APN,
+            'HHPN': board.HHPN,
             'first_GS_sn': board.first_GS_sn,
             'second_GS_sn': board.second_GS_sn,
             'checkin_time': checkin_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkin_record else '',

@@ -54,20 +54,24 @@ class Command(BaseCommand):
             next_station, index = find_first_error_station(test_plan, test_record)
             if next_station:
                 result_dict=get_request(ip=IP,sn=board_unit.serial_number,station_type=next_station)
+                if result_dict['start_time'] == "":
+                    print("没记录")
+                    continue
+                # Compare result_dict["start_time"] with the board_unit the newest TestRecord of checkin start_time
+                # If result_dict["start_time"] <= the newest TestRecord of checkin start_time, then continue
+                start_time = datetime.strptime(result_dict["start_time"], "%Y-%m-%d %H:%M:%S")
+                checkin_time = TestRecord.objects.filter(board=board_unit,cp_nums=board_unit.cp_nums,station_type="checkin").order_by("-start_time").first().start_time
+                if start_time <= checkin_time:
+                    print("不是本轮的记录")
+                    continue
                 
-                for key, value in result_dict.items():
-                    # Skip checking for 'failure_message' and 'list_of_failing_tests' keys
-                    if key in ['failure_message', 'list_of_failing_tests']:
-                        continue
-                    if value == "" or value is None:
-                        print("没记录")
-                        continue
                 result_dict["result"] = result_dict["result"].lower()
                 # Pretty print the dictionary
                 print("Result Dictionary:")
                 print(json.dumps(result_dict, indent=4, ensure_ascii=False))
                 with open("/Users/tony_wei/Desktop/HuangZP/mysite0807/logfile.txt","a") as log:
-                    log.write(json.dumps(result_dict, indent=4, ensure_ascii=False))
+                    log.write("Result Dictionary:")
+                    # log.write(json.dumps(result_dict, indent=4, ensure_ascii=False))
                     log.write("\n")
                 start_time = datetime.strptime(result_dict["start_time"], "%Y-%m-%d %H:%M:%S")
                 stop_time = datetime.strptime(result_dict["stop_time"], "%Y-%m-%d %H:%M:%S")
