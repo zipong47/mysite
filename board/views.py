@@ -895,7 +895,9 @@ def filter_boards(request):
     status_set = Board.objects.values_list('status', flat=True).distinct()
     cp_number_set = Board.objects.values_list('cp_nums', flat=True).distinct()
     subproject_name_set = Board.objects.values_list('subproject_name', flat=True).distinct()
+    test_item_name_set = Board.objects.values_list('test_item_name', flat=True).distinct()
     
+    context["test_item_name_set"] = test_item_name_set
     context["subproject_name_set"] = subproject_name_set
     context["cp_number_set"] = cp_number_set
     context["status_set"] = status_set
@@ -1182,3 +1184,109 @@ def download_archive_boards(request):
         return response
 
     return JsonResponse({'status': 'failed'}, status=400)
+
+@csrf_exempt
+def archive_boards(request):
+    context = {}
+    project_name_set = Board.objects.values_list('project_name', flat=True).distinct()
+    build_name_set = Board.objects.values_list('subproject_name', flat=True).distinct()
+    result_set = TestRecord.objects.values_list('result', flat=True).distinct()
+    product_code_set = Board.objects.values_list('product_code', flat=True).distinct()
+    site_set = Board.objects.values_list('site', flat=True).distinct()
+    status_set = Board.objects.values_list('status', flat=True).distinct()
+    cp_number_set = Board.objects.values_list('cp_nums', flat=True).distinct()
+    project_config_set = Board.objects.values_list('project_config',flat=True).distinct()
+    test_item_name_set = Board.objects.values_list('test_item_name', flat=True).distinct()
+    
+    context["test_item_name_set"] = test_item_name_set
+    context["project_config_set"] = project_config_set
+    context["cp_number_set"] = cp_number_set
+    context["status_set"] = status_set
+    context["site_set"] = site_set
+    context["product_code_set"] = product_code_set
+    context["project_name_set"] = project_name_set
+    context["build_name_set"] = build_name_set
+    context["result_set"] = result_set
+
+    return render(request, "board/archive_board.html", context)
+
+@csrf_exempt
+def archive_boards_ajax(request):
+    site = request.GET.get('site', '')
+    dateTimeRange = request.GET.get('dateTimeRange', '')
+    product_code = request.GET.get('product_code', '')
+    project_name = request.GET.get('project_name', '')
+    build_name = request.GET.get('subproject_name', '')
+    result = request.GET.get('result', '')
+    project_config = request.GET.get('project_config', '')
+    test_item_name = request.GET.get('test_item', '')
+    cp_nums = request.GET.get('cp', '')
+    status = request.GET.get('status', '')
+    
+    print("archive board____________________")
+    
+    boards = Board.objects.all()
+
+    if site:
+        boards = boards.filter(site=site)
+    if dateTimeRange:
+        start_time, end_time = dateTimeRange.split(' to ')
+        start_time = datetime.strptime(start_time, '%Y-%m-%d')
+        end_time = datetime.strptime(end_time, '%Y-%m-%d')
+        test_records = TestRecord.objects.filter(start_time__range=(start_time, end_time))
+        boards = boards.filter(testrecord__in=test_records).distinct()
+
+    if product_code:
+        boards = boards.filter(product_code=product_code)
+    if project_name:
+        boards = boards.filter(project_name=project_name)
+    if build_name:
+        boards = boards.filter(subproject_name=build_name)
+    if result:
+        boards = boards.filter(testrecord__result=result)
+    if project_config:
+        boards = boards.filter(project_config=project_config)
+    if test_item_name:
+        boards = boards.filter(test_item_name=test_item_name)
+    if cp_nums:
+        boards = boards.filter(cp_nums=cp_nums)
+    if status:
+        boards = boards.filter(status=status)
+
+    board_sn_list = list(boards.values_list('serial_number', flat=True))
+    paginator = Paginator(boards, 17)  # 每页显示17条记录
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    response = []
+    for board in page_obj:
+        checkin_record = board.testrecord_set.filter(station_type='checkin', cp_nums=board.cp_nums).first()
+        checkout_record = board.testrecord_set.filter(station_type='checkout', cp_nums=board.cp_nums).first()
+        error_record = board.errorrecord_set.first()
+
+        response.append({
+            'serial_number': board.serial_number,
+            'project_config': board.project_config,
+            'test_item_name': board.test_item_name,
+            'product_code': board.product_code,
+            'subproject_name': board.subproject_name,
+            'site': board.site,
+            'board_number': board.board_number,
+            'configuration': board.configuration,
+            'APN': board.APN,
+            'HHPN': board.HHPN,
+            'first_GS_sn': board.first_GS_sn,
+            'second_GS_sn': board.second_GS_sn,
+            'checkin_time': checkin_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkin_record else '',
+            'checkout_time': checkout_record.start_time.strftime('%Y/%m/%d %H:%M:%S') if checkout_record else '',
+            'status': board.status,
+            'radar': error_record.radar if error_record else '',
+            'remark': error_record.remark if error_record else '',
+        })
+
+    return JsonResponse({
+        'results': response,
+        'total_pages': paginator.num_pages,
+        'current_page': page_obj.number,
+        'board_sn_list': board_sn_list
+    })

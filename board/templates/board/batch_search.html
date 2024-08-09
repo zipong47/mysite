@@ -111,6 +111,12 @@
                         单板查询
                       </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'archive_boards' %}">
+                            <span data-feather="file-text" class="align-text-bottom"></span>
+                            板子入库
+                        </a>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -175,7 +181,6 @@
                     <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" id="exportReport">导出报告</button>
                     <!-- 添加“Archived”按钮 -->
                     <input id="selectedBoardIds" hidden>
-                    <button type="button" class="btn btn-warning mb-2 ml-2 align-middle" id="archiveBoards">入库</button>
                 </div>
             </form>
 
@@ -222,29 +227,6 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="archiveModal" tabindex="-1" aria-labelledby="archiveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="archiveModalLabel">Archive Boards</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>您确定要入库所选的MLB吗？您可以先下载MLB信息进行比较，然后选择入库。</p>
-                <!-- 在这里显示筛选信息 -->
-                <div id="filterInfo"></div>
-            </div>
-            <div class="modal-footer">
-                <!-- 下载按钮 -->
-                <button type="button" class="btn btn-primary" id="downloadBoards">下载入库MLB信息</button>
-                <!-- 存档按钮 -->
-                <button type="button" class="btn btn-warning" id="confirmArchive">确认入库</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/feather.min.js' %}"></script>
 <script src="{% static 'js/Chart.min.js' %}"></script>
@@ -284,96 +266,7 @@
         $('#exportReport').on('click', function () {
             showSpinnerForExport();
         });
-        
-        $('#archiveBoards').on('click', function () {
-            var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
-            if (selectedBoards.length === 0) {
-                alert('请至少选择一块板子进行入库。');
-                return;
-            }
-            // Count the number of board_sn_list
-            length_of_selectedBoards = selectedBoards.length;
-            // 显示筛选信息
-            var filterInfo = `
-            <p>已选择板子的总数: ${length_of_selectedBoards}</p>
-            <p>Site: ${$('#site').val() || '所有'}</p>
-            <p>Date Range: ${$('#dateTimeRange').val() || '所有'}</p>
-            <p>Product Code: ${$('#product_code').val() || '所有'}</p>
-            <p>Project Name: ${$('#project_name').val() || '所有'}</p>
-            <p>Build Stage: ${$('#subproject_name').val() || '所有'}</p>
-            <p>Result: ${$('#result').val() || '所有'}</p>
-        `;
-            $('#filterInfo').html(filterInfo);
 
-            // 显示模态框
-            $('#archiveModal').modal('show');
-        });
-
-        $('#downloadBoards').on('click', function () {
-            var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
-
-            // 使用 AJAX 请求下载信息
-            $.ajax({
-                type: 'POST',
-                url: '{% url "download_boards" %}',
-                data: {
-                    'selected_boards': JSON.stringify(selectedBoards),
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                xhrFields: {
-                    responseType: 'blob'
-                },
-                success: function (response, status, xhr) {
-                    var disposition = xhr.getResponseHeader('Content-Disposition');
-                    var filename = 'boards_info.xlsx';
-
-                    if (disposition && disposition.indexOf('attachment') !== -1) {
-                        var matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-                        if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
-                    }
-
-                    var blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    var url = window.URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                },
-                error: function (error) {
-                    alert('Error downloading board information.');
-                }
-            });
-        });
-
-        $('#confirmArchive').on('click', function () {
-            var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
-            length_of_selectedBoards = selectedBoards.length;
-            // 弹出确认提示
-            var confirmation = confirm('确认要入库 '+ length_of_selectedBoards +' 块板子吗?');
-            // 发送已选中的板子信息到后端进行存档
-            if (confirmation){
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url "archive_boards" %}',
-                    data: {
-                        'selected_boards': JSON.stringify(selectedBoards),
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function (response) {
-
-                        alert('成功入库 ' + length_of_selectedBoards + ' 块板子。');
-                        // 关闭模态框
-                        $('#archiveModal').modal('hide');
-                        // 可以在此更新页面或进行其他操作
-                    },
-                    error: function (error) {
-                        alert('Error archiving boards.');
-                    }
-                });
-            }
-        });
     });
 
     function getRandomDelay(min, max) {

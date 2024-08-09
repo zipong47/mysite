@@ -29,6 +29,8 @@ urlpatterns = [
     path('track_board/', views.track_board, name='track_board'),
     path('track_board_ajax/<str:serial_number>/', views.track_board_ajax, name='track_board_ajax'),
     path('export_report/', views.export_report, name='export_report'),
-    path('archive_boards/', views.archive_boards, name='archive_boards'),
     path('download_boards/', views.download_archive_boards, name='download_boards'),
+    path('archive_boards/', views.archive_boards, name='archive_boards'),
+    path('archive_boards_ajax/', views.archive_boards_ajax, name='archive_boards_ajax'),
+    path('download_archive_boards/', views.download_archive_boards, name='download_archive_boards'),
 ]

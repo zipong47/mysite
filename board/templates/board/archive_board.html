@@ -112,7 +112,7 @@
                       </a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" href="*">
+                      <a class="nav-link" href="{% url 'archive_boards' %}">
                         <span data-feather="file-text" class="align-text-bottom"></span>
                         板子入库
                       </a>
@@ -123,12 +123,12 @@
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">板子库</h1>
+                <h1 class="h2">板子入库</h1>
             </div>
 
             <form id="filterForm" class="form-inline row">
                 <div class="form-group col-auto">
-                    <label>Site:</label>
+                    <label> Site:</label>
                     <select class="form-control form-select" id="site" name="site">
                         <option value="">Select site</option>
                         {% for site in site_set %}
@@ -137,7 +137,7 @@
                     </select>
                 </div>
                 <div class="form-group col-auto">
-                    <label>Time:</label>
+                    <label>工站测试时间:</label>
                     <input type="text" class="form-control flatpickr-input" id="dateTimeRange" name="dateTimeRange" placeholder="Select date range">
                 </div>
                 <div class="form-group col-auto">
@@ -176,8 +176,44 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="form-group col-auto">
+                    <label>板子状态:</label>
+                    <select class="form-control form-select" id="status" name="status">
+                        <option value="">Select status</option>
+                        {% for status in status_set %}
+                        <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-auto">
+                    <label>CP:</label>
+                    <select class="form-control form-select" id="cp" name="cp">
+                        <option value="">Select CP</option>
+                        {% for cp in cp_number_set %}
+                        <option value="{{ cp }}">{{ cp }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-auto">
+                    <label>板子配置:</label>
+                    <select class="form-control form-select" id="project_config" name="project_config">
+                        <option value="">Select Config</option>
+                        {% for project_config in project_config_set %}
+                        <option value="{{ project_config }}">{{ project_config }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-auto">
+                    <label>环境项目:</label>
+                    <select class="form-control form-select" id="test_item" name="test_item">
+                        <option value="">Select status</option>
+                        {% for test_item in test_item_name_set %}
+                        <option value="{{ test_item }}">{{ test_item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="form-group col-auto d-flex align-items-center">
-                    <button type="submit" class="btn btn-primary mb-2 align-middle">Submit</button>
+                    <button type="submit" class="btn btn-primary mb-2 align-middle">搜索</button>
                     <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" id="exportReport">导出报告</button>
                     <!-- 添加“Archived”按钮 -->
                     <input id="selectedBoardIds" hidden>
@@ -233,7 +269,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="archiveModalLabel">Archive Boards</h5>
+                <h5 class="modal-title" id="archiveModalLabel">MLB入库</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -410,6 +446,10 @@
         var project_name = $('#project_name').val();
         var subproject_name = $('#subproject_name').val();
         var result = $('#result').val();
+        var status = $('#status').val();
+        var cp = $('#cp').val();
+        var project_config = $('#project_config').val();
+        var test_item = $('#test_item').val();
 
         var data = {
             dateTimeRange: dateTimeRange,
@@ -418,12 +458,16 @@
             project_name: project_name,
             subproject_name: subproject_name,
             result: result,
-            page: page
+            page: page,
+            status: status,
+            cp: cp,
+            project_config: project_config,
+            test_item: test_item
         };
 
         $.ajax({
             type: 'GET',
-            url: '{% url "filter_search_boards_ajax" %}',
+            url: '{% url "archive_boards_ajax" %}',
             data: data,
             success: function(response) {
                 document.getElementById("searchReminder").classList.add("hidden");
@@ -436,7 +480,7 @@
                     $('.customize_message_html').html(response.customize_message);
                     $('.customize_message_html').removeClass("hidden");
                 }
-
+                    
                 $.each(response.results, function(index, result) {
                     var row = '<tr>' +
                         '<td>' + result.project_config + '</td>' +
