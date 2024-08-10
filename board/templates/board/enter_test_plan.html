@@ -194,6 +194,17 @@
                   {% endfor %}
                 </select>
               </div>
+
+              <div class="form-group col-auto">
+                <label>测试项目:</label>
+                <select class="form-control form-select" id="test_item" name="test_item">
+                  <option value="ALL">ALL</option>
+                  {% for test_item in test_item_name_set %}
+                  <option value="{{ test_item }}">{{ test_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
               <div class="form-group">
                 <label for="data">CheckPoints</label>
                 <input type="text" name="cp" class="form-control" required>
@@ -412,7 +423,6 @@
               const form = modalBody.querySelector('form');
               if (form) {
                 form.action = url;
-                console.log("success________________")
               }
             });
         });

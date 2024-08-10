@@ -485,7 +485,13 @@ def enter_test_plan(request):
                 str=project_name+"-"+each+"-"+build_name
                 project_config_build_list.append(str)
     
-    context={'options': project_config_build_list}
+    test_item_name_set = Board.objects.values_list('test_item_name',flat=True).distinct()
+    print("test_item_name_set:",test_item_name_set)
+    context={
+        'options': project_config_build_list,
+        'test_item_name_set': test_item_name_set
+    }
+    test_item = request.POST.get('test_item')
     data = request.POST.getlist('data[]')
     project_config_build_str = request.POST.get('extra_data')
     checkpoint_str = request.POST.get('cp')
@@ -497,7 +503,12 @@ def enter_test_plan(request):
         
         exist_test_schedule=[]
         test_plan_list=[]
-        board_query_set=Board.objects.filter(project_name=project_name,project_config=config_name,subproject_name=build_name)
+        
+        if test_item == 'ALL':
+            board_query_set=Board.objects.filter(project_name=project_name,project_config=config_name,subproject_name=build_name)
+        else:
+            board_query_set=Board.objects.filter(project_name=project_name,project_config=config_name,subproject_name=build_name, test_item_name=test_item)
+            
         for board in board_query_set:
             for cp in checkpoint_list:
                 if TestSchedule.objects.filter(serial_number=board,cp_nums=cp).exists():
@@ -534,8 +545,12 @@ def search_test_plan(request):
             for build_name in build_name_set:
                 str=project_name+"-"+each+"-"+build_name
                 project_config_build_list.append(str)
-    
-    context={'options': project_config_build_list}
+    test_item_name_set = Board.objects.values_list('test_item_name',flat=True).distinct()
+    print("test_item_name_set:",test_item_name_set)
+    context={
+        'options': project_config_build_list,
+        'test_item_name_set': test_item_name_set
+    }
     
     data=request.POST.get("keyword")
     search_option=request.POST.get("flexRadioDefault")
