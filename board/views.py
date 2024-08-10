@@ -996,10 +996,10 @@ def track_board(request):
 def track_board_ajax(request, serial_number):
     try:
         board = Board.objects.get(serial_number=serial_number)
-        test_records = TestRecord.objects.filter(board=board)
+        test_records = TestRecord.objects.filter(board=board).order_by('-start_time')
 
         # 分页
-        paginator = Paginator(test_records, 12)  # 每页显示10条记录
+        paginator = Paginator(test_records, 12)  # 每页显示12条记录
         page_number = request.GET.get('page', 1)  # 获取当前页码，默认为第一页
         page_obj = paginator.get_page(page_number)
 
@@ -1133,17 +1133,19 @@ def export_report(request):
     return response
 
 @csrf_exempt
-def archive_boards(request):
+def confirm_archive_boards(request):
     if request.method == 'POST':
         selected_boards = json.loads(request.POST.get('selected_boards', '[]'))
+        userId = request.POST.get('userId')
+        print("userId:"+userId)
         # 在此处理选中的板子信息，例如更新数据库中的字段以标记为已存档
-        # 例如：
-        # Board.objects.filter(serial_number__in=selected_boards).update(archived=True)
         for serial_number in selected_boards:
             print(serial_number)
-            # board = Board.objects.get(serial_number=serial_number)
-            # board.status = 'archived'
-            # board.save()
+            board = Board.objects.get(serial_number=serial_number)
+            record = TestRecord(board=board, station_type='archived', result='pass', operator=userId, start_time = datetime.now(), stop_time = datetime.now(), cp_nums = board.cp_nums).save()
+            record.save()
+            board.status = 'archived'
+            board.save()
         return JsonResponse({'status': 'success'})
 
     return JsonResponse({'status': 'failed'}, status=400)

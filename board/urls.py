@@ -31,6 +31,7 @@ urlpatterns = [
     path('export_report/', views.export_report, name='export_report'),
     path('download_boards/', views.download_archive_boards, name='download_boards'),
     path('archive_boards/', views.archive_boards, name='archive_boards'),
+    path('confirm_archive_boards/', views.confirm_archive_boards, name='confirm_archive_boards'),
     path('archive_boards_ajax/', views.archive_boards_ajax, name='archive_boards_ajax'),
     path('download_archive_boards/', views.download_archive_boards, name='download_archive_boards'),
 ]

@@ -179,14 +179,14 @@
                     </select>
                 </div>
                 <!-- <div class="form-group col-auto">
-                                    <label>Product Name:</label>
-                                    <select class="form-control form-select" id="project_name" name="project_name">
-                                        <option value="">Select project name</option>
-                                        {% for project in project_name_set %}
-                                        <option value="{{ project }}">{{ project }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div> -->
+                    <label>Product Name:</label>
+                    <select class="form-control form-select" id="project_name" name="project_name">
+                        <option value="">Select project name</option>
+                        {% for project in project_name_set %}
+                        <option value="{{ project }}">{{ project }}</option>
+                        {% endfor %}
+                    </select>
+                </div> -->
                 <div class="form-group col-auto">
                     <label>CP:</label>
                     <select class="form-control form-select" id="cp" name="cp">
@@ -215,6 +215,12 @@
                         {% endfor %}
                     </select>
                 </div>
+
+                <div class="form-group col-auto">
+                    <label for="userId">入库人工号:</label>
+                    <input type="text" class="form-control" id="userId" name="userId" placeholder="请输入入库人工号">
+                </div>
+
                 <div class="form-group col-auto d-flex align-items-center">
                     <button type="submit" class="btn btn-primary mb-2 align-middle">搜索</button>
                     <button type="button" class="btn btn-secondary mb-2 ml-2 align-middle" id="exportReport">导出报告</button>
@@ -332,6 +338,12 @@
         
         $('#archiveBoards').on('click', function () {
             var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
+            var userId = $('#userId').val().trim(); // Get the user ID value
+            if (!userId) {
+                alert('请输入入库人的ID。');
+                return;
+            }
+
             if (selectedBoards.length === 0) {
                 alert('请至少选择一块板子进行入库。');
                 return;
@@ -347,7 +359,7 @@
             <p>Project Name: ${$('#project_name').val() || '所有'}</p>
             <p>Build Stage: ${$('#subproject_name').val() || '所有'}</p>
             <p>Result: ${$('#result').val() || '所有'}</p>
-        `;
+            `;
             $('#filterInfo').html(filterInfo);
 
             // 显示模态框
@@ -394,6 +406,8 @@
 
         $('#confirmArchive').on('click', function () {
             var selectedBoards = JSON.parse($('#selectedBoardIds').val() || '[]');
+            var userId = $('#userId').val().trim(); // Get the user ID value
+
             length_of_selectedBoards = selectedBoards.length;
             // 弹出确认提示
             var confirmation = confirm('确认要入库 '+ length_of_selectedBoards +' 块板子吗?');
@@ -401,8 +415,9 @@
             if (confirmation){
                 $.ajax({
                     type: 'POST',
-                    url: '{% url "archive_boards" %}',
+                    url: '{% url "confirm_archive_boards" %}',
                     data: {
+                        'userId': userId,
                         'selected_boards': JSON.stringify(selectedBoards),
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
