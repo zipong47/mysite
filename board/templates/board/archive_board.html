@@ -128,69 +128,11 @@
 
             <form id="filterForm" class="form-inline row">
                 <div class="form-group col-auto">
-                    <label> Site:</label>
-                    <select class="form-control form-select" id="site" name="site">
-                        <option value="">Select site</option>
-                        {% for site in site_set %}
-                        <option value="{{ site }}">{{ site }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>工站测试时间:</label>
-                    <input type="text" class="form-control flatpickr-input" id="dateTimeRange" name="dateTimeRange" placeholder="Select date range">
-                </div>
-                <div class="form-group col-auto">
                     <label>Product Code:</label>
                     <select class="form-control form-select" id="product_code" name="product_code">
                         <option value="">Select product code</option>
                         {% for product in product_code_set %}
                         <option value="{{ product }}">{{ product }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>Product Name:</label>
-                    <select class="form-control form-select" id="project_name" name="project_name">
-                        <option value="">Select project name</option>
-                        {% for project in project_name_set %}
-                        <option value="{{ project }}">{{ project }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>Build Stage:</label>
-                    <select class="form-control form-select" id="subproject_name" name="subproject_name">
-                        <option value="">Select build stage</option>
-                        {% for subproject in build_name_set %}
-                        <option value="{{ subproject }}">{{ subproject }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>Result:</label>
-                    <select class="form-control form-select" id="result" name="result">
-                        <option value="">Select result</option>
-                        {% for result in result_set %}
-                        <option value="{{ result }}">{{ result }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>板子状态:</label>
-                    <select class="form-control form-select" id="status" name="status">
-                        <option value="">Select status</option>
-                        {% for status in status_set %}
-                        <option value="{{ status }}">{{ status }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-auto">
-                    <label>CP:</label>
-                    <select class="form-control form-select" id="cp" name="cp">
-                        <option value="">Select CP</option>
-                        {% for cp in cp_number_set %}
-                        <option value="{{ cp }}">{{ cp }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -204,11 +146,72 @@
                     </select>
                 </div>
                 <div class="form-group col-auto">
-                    <label>环境项目:</label>
+                    <label>Build Stage:</label>
+                    <select class="form-control form-select" id="subproject_name" name="subproject_name">
+                        <option value="">Select build stage</option>
+                        {% for subproject in build_name_set %}
+                        <option value="{{ subproject }}">{{ subproject }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-auto">
+                    <label>工站测试时间:</label>
+                    <input type="text" class="form-control flatpickr-input" id="dateTimeRange" name="dateTimeRange"
+                        placeholder="Select date range">
+                </div>
+                <div class="form-group col-auto">
+                    <label>Result:</label>
+                    <select class="form-control form-select" id="result" name="result">
+                        <option value="">Select result</option>
+                        {% for result in result_set %}
+                        <option value="{{ result }}">{{ result }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group col-auto">
+                    <label>板子状态:</label>
+                    <select class="form-control form-select" id="status" name="status">
+                        <option value="">Select status</option>
+                        {% for status in status_set %}
+                        <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- <div class="form-group col-auto">
+                                    <label>Product Name:</label>
+                                    <select class="form-control form-select" id="project_name" name="project_name">
+                                        <option value="">Select project name</option>
+                                        {% for project in project_name_set %}
+                                        <option value="{{ project }}">{{ project }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div> -->
+                <div class="form-group col-auto">
+                    <label>CP:</label>
+                    <select class="form-control form-select" id="cp" name="cp">
+                        <option value="">Select CP</option>
+                        {% for cp in cp_number_set %}
+                        <option value="{{ cp }}">{{ cp }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group col-auto">
+                    <label>测试项目:</label>
                     <select class="form-control form-select" id="test_item" name="test_item">
                         <option value="">Select status</option>
                         {% for test_item in test_item_name_set %}
                         <option value="{{ test_item }}">{{ test_item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-auto">
+                    <label> Site:</label>
+                    <select class="form-control form-select" id="site" name="site">
+                        <option value="">Select site</option>
+                        {% for site in site_set %}
+                        <option value="{{ site }}">{{ site }}</option>
                         {% endfor %}
                     </select>
                 </div>

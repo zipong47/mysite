@@ -894,11 +894,11 @@ def filter_boards(request):
     site_set = Board.objects.values_list('site', flat=True).distinct()
     status_set = Board.objects.values_list('status', flat=True).distinct()
     cp_number_set = Board.objects.values_list('cp_nums', flat=True).distinct()
-    subproject_name_set = Board.objects.values_list('subproject_name', flat=True).distinct()
+    project_config_set = Board.objects.values_list('project_config',flat=True).distinct()
     test_item_name_set = Board.objects.values_list('test_item_name', flat=True).distinct()
     
     context["test_item_name_set"] = test_item_name_set
-    context["subproject_name_set"] = subproject_name_set
+    context["project_config_set"] = project_config_set
     context["cp_number_set"] = cp_number_set
     context["status_set"] = status_set
     context["site_set"] = site_set
@@ -915,9 +915,12 @@ def filter_search_boards_ajax(request):
     dateTimeRange = request.GET.get('dateTimeRange', '')
     product_code = request.GET.get('product_code', '')
     project_name = request.GET.get('project_name', '')
-    subproject_name = request.GET.get('subproject_name', '')
+    build_name = request.GET.get('subproject_name', '')
     result = request.GET.get('result', '')
-
+    project_config = request.GET.get('project_config', '')
+    test_item_name = request.GET.get('test_item', '')
+    cp_nums = request.GET.get('cp', '')
+    status = request.GET.get('status', '')
     boards = Board.objects.all()
 
     if site:
@@ -933,10 +936,18 @@ def filter_search_boards_ajax(request):
         boards = boards.filter(product_code=product_code)
     if project_name:
         boards = boards.filter(project_name=project_name)
-    if subproject_name:
-        boards = boards.filter(subproject_name=subproject_name)
+    if build_name:
+        boards = boards.filter(subproject_name=build_name)
     if result:
         boards = boards.filter(testrecord__result=result)
+    if project_config:
+        boards = boards.filter(project_config=project_config)
+    if test_item_name:
+        boards = boards.filter(test_item_name=test_item_name)
+    if cp_nums:
+        boards = boards.filter(cp_nums=cp_nums)
+    if status:
+        boards = boards.filter(status=status)
 
     board_sn_list = list(boards.values_list('serial_number', flat=True))
     paginator = Paginator(boards, 17)  # 每页显示17条记录
